@@ -82,6 +82,7 @@ export default function CartPage() {
 
 
   const saveCart = (items: CartItem[]) => {
+    const clonedItems = [...items];
     localStorage.setItem('cart', JSON.stringify(items));
     setCartItems(items);
     window.dispatchEvent(new CustomEvent('cartUpdated'));
