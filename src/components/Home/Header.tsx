@@ -53,9 +53,9 @@ const totalItems = useCartStore((state) =>
   const navItems = [
     { label: "Home", href: "/", icon: Home },
     { label: "Collections", href: "/collections", icon: Package },
-    { label: "New Arrivals", href: "/new-arrivals", icon: Zap },
-    { label: "Pre-orders", href: "/pre-orders", icon: Bell },
-    { label: "Exclusive", href: "/exclusive", icon: Sparkles },
+    { label: "KeyChains", href: "/keychains", icon: Zap },
+    { label: "Gift-Items", href: "/gift-items", icon: Bell },
+    { label: "Others", href: "/others", icon: Sparkles },
   ];
 
   /* -------------------- AUTH CHECK -------------------- */

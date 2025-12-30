@@ -98,11 +98,11 @@ export function ProductGrid({
                     </div>
                     <div className="text-right">
                       <div className="text-2xl font-bold text-white">
-                        ${product.discountPrice || product.price}
+                        ₹{(product.discountPrice || product.price).toFixed(0)}
                       </div>
                       {product.discountPrice && (
                         <div className="text-sm text-gray-400 line-through">
-                          ${product.price}
+                          ₹{product.price.toFixed(0)}
                         </div>
                       )}
                     </div>

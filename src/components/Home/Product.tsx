@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Heart, Eye, Star } from "lucide-react";
 import api from "@/lib/axios";
+import { useCartStore } from '@/store/cartStore';
 
 type Product = {
   _id: string;
@@ -40,7 +41,13 @@ export default function ProductsSection({
   async function fetchProducts() {
     try {
       const res = await api.get("/products");
-      setProducts(res.data.products);
+      // choose 4 random products for the home section
+      const all = Array.isArray(res.data.products) ? res.data.products : [];
+      for (let i = all.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [all[i], all[j]] = [all[j], all[i]];
+      }
+      setProducts(all.slice(0, 4));
     } catch (err) {
       console.error("Failed to load products");
     } finally {
@@ -159,7 +166,15 @@ export default function ProductsSection({
                   <div className="mt-auto flex gap-2">
                     <button
                       disabled={product.stock === 0}
-                      onClick={() => setCartCount((p) => p + 1)}
+                      onClick={() => {
+                        const add = useCartStore.getState().addToCart;
+                        add(product as any, 1);
+                        // update parent cart count if provided
+                        if (typeof setCartCount === 'function') {
+                          const count = useCartStore.getState().totalItems();
+                          setCartCount(count);
+                        }
+                      }}
                       className="flex-1 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg font-semibold disabled:opacity-50"
                     >
                       Add to Cart
