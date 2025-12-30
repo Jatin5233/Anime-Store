@@ -4,7 +4,7 @@ import { Product } from "@/models/Product";
 
 export async function GET(
   req: Request,
-  { params }: { params: { slug: string } }
+  { params }: any
 ) {
   try {
     await connectDB();
