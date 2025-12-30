@@ -22,3 +22,17 @@ export function requireAuth(req: Request): AuthUser | NextResponse {
     );
   }
 }
+
+export function isNextResponse(value: unknown): value is NextResponse {
+  try {
+    return (
+      typeof value === "object" &&
+      value !== null &&
+      // NextResponse has a status property (number) and headers function
+      "status" in (value as object) &&
+      typeof (value as { status?: unknown }).status === "number"
+    );
+  } catch {
+    return false;
+  }
+}
