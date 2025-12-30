@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/MongoDB";
 import { Cart } from "@/models/Cart";
-import { requireAuth } from "@/lib/requireAuth";
+import { requireAuth, isNextResponse } from "@/lib/requireAuth";
 
 export async function DELETE(req: Request) {
   await connectDB();
 
   const auth = requireAuth(req);
-  if ((auth as any)?.status === 401) return auth as NextResponse;
+  if (isNextResponse(auth)) return auth;
   const { userId } = auth as { userId: string };
 
   const { productId } = await req.json();
