@@ -46,29 +46,40 @@ export default function CartPage() {
     return () => window.removeEventListener('cartUpdated', handleCartUpdate);
   }, []);
 
-  async function loadCart() {
-    const token = getAccessToken();
-    if (token) {
-      try {
-        const res = await fetch('/api/cart', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        if (data?.success && data.cart?.items) {
-          // items are { product, quantity }
-          const items = data.cart.items.map((it: { product: Product; quantity: number }) => ({ ...it.product, quantity: it.quantity }));
-          setCartItems(items);
-          return;
-        }
-      } catch (err) {
-        console.error('Failed to load server cart, falling back to localStorage', err);
-      }
-    }
+  const loadCart = async () => {
+  const token = getAccessToken();
 
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const items = (cart as Array<Partial<Product> & { quantity?: number }>).map((p) => ({ ...(p as Product), quantity: p.quantity || 1 }));
-    setCartItems(items);
+  if (token) {
+    try {
+      const res = await fetch('/api/cart', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+
+      if (data?.success && data.cart?.items) {
+        const items = data.cart.items.map(
+          (it: { product: Product; quantity: number }) => ({
+            ...it.product,
+            quantity: it.quantity,
+          })
+        );
+        setCartItems(items);
+        return;
+      }
+    } catch (err) {
+      console.error('Failed to load server cart, falling back to localStorage', err);
+    }
   }
+
+  const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+  const items = cart.map((p: any) => ({
+    ...p,
+    quantity: p.quantity || 1,
+  }));
+
+  setCartItems(items);
+};
+
 
   const saveCart = (items: CartItem[]) => {
     localStorage.setItem('cart', JSON.stringify(items));
