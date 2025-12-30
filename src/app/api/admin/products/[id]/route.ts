@@ -4,10 +4,7 @@ import { Product } from "@/models/Product";
 import { requireAuth } from "@/lib/requireAuth";
 import { requireAdmin } from "@/lib/requireAdmin";
 
-export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: Request, { params }: any) {
   const auth = requireAuth(req);
   if (auth instanceof Response) return auth;
 
@@ -26,10 +23,7 @@ export async function GET(
 
   return NextResponse.json({ product });
 }
-export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(req: Request, { params }: any) {
   const auth = requireAuth(req);
   if (auth instanceof Response) return auth;
 
@@ -64,10 +58,7 @@ export async function PUT(
     );
   }
 }
-export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: Request, { params }: any) {
   const auth = requireAuth(req);
   if (auth instanceof Response) return auth;
 
