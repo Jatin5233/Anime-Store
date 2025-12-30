@@ -23,9 +23,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
 
-interface AdminLayoutProps {
-  children: React.ReactNode;
-}
+// Page does not accept children — this file is the admin dashboard page
 function isAdminClient(): boolean {
   if (typeof window === "undefined") return false;
 
@@ -40,7 +38,7 @@ function isAdminClient(): boolean {
   }
 }
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
+export default function AdminPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [notifications] = useState(3);
@@ -353,8 +351,19 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </div>
 
           {/* Page Content */}
-          <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-cyan-500/20 overflow-hidden">
-            {children}
+          <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-cyan-500/20 overflow-hidden p-6">
+            {/* Admin page content: dashboard overview and quick links */}
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-2">Overview</h3>
+              <p className="text-sm text-gray-400 mb-4">Use the sidebar to navigate admin sections (Products, Orders, Users, Analytics).</p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Link href="/admin/products" className="px-4 py-3 bg-gray-800/40 rounded-lg border border-cyan-500/10 text-cyan-300">Manage Products</Link>
+                <Link href="/admin/orders" className="px-4 py-3 bg-gray-800/40 rounded-lg border border-purple-500/10 text-purple-300">View Orders</Link>
+                <Link href="/admin/users" className="px-4 py-3 bg-gray-800/40 rounded-lg border border-pink-500/10 text-pink-300">Manage Users</Link>
+                <Link href="/admin/analytics" className="px-4 py-3 bg-gray-800/40 rounded-lg border border-green-500/10 text-green-300">Analytics</Link>
+              </div>
+            </div>
           </div>
         </main>
       </div>
