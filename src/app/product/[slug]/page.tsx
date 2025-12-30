@@ -28,11 +28,7 @@ import {
 } from 'lucide-react';
 import { Product } from '@/types/product';
 
-interface ProductPageProps {
-  params: {
-    slug: string;
-  };
-}
+// Page receives params via `useParams()` in a client component
 
 // PriceBox Component
 function PriceBox({ 
@@ -575,7 +571,7 @@ function ProductFeatures({ features }: { features?: string[] }) {
 }
 
 // Main ProductPage Component
-export default function ProductPage({ params }: ProductPageProps) {
+export default function ProductPage() {
   const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
