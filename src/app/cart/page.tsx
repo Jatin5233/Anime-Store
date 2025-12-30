@@ -31,21 +31,7 @@ export default function CartPage() {
   const [discount, setDiscount] = useState(0);
 
   // Load cart on mount: if logged in, fetch server cart; otherwise use localStorage
-  useEffect(() => {
-    (async () => {
-      await loadCart();
-      setLoading(false);
-    })();
-
-    // Listen for cart updates
-    const handleCartUpdate = () => {
-      loadCart();
-    };
-
-    window.addEventListener('cartUpdated', handleCartUpdate);
-    return () => window.removeEventListener('cartUpdated', handleCartUpdate);
-  }, []);
-
+  
   const loadCart = async () => {
   const token = getAccessToken();
 
@@ -79,6 +65,20 @@ export default function CartPage() {
 
   setCartItems(items);
 };
+useEffect(() => {
+    (async () => {
+      await loadCart();
+      setLoading(false);
+    })();
+
+    // Listen for cart updates
+    const handleCartUpdate = () => {
+      loadCart();
+    };
+
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    return () => window.removeEventListener('cartUpdated', handleCartUpdate);
+  }, []);
 
 
   const saveCart = (items: CartItem[]) => {
