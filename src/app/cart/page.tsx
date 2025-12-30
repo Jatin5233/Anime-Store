@@ -46,7 +46,7 @@ export default function CartPage() {
     return () => window.removeEventListener('cartUpdated', handleCartUpdate);
   }, []);
 
-  const loadCart = async () => {
+  async function loadCart() {
     const token = getAccessToken();
     if (token) {
       try {
@@ -56,7 +56,7 @@ export default function CartPage() {
         const data = await res.json();
         if (data?.success && data.cart?.items) {
           // items are { product, quantity }
-          const items = data.cart.items.map((it: any) => ({ ...it.product, quantity: it.quantity }));
+          const items = data.cart.items.map((it: { product: Product; quantity: number }) => ({ ...it.product, quantity: it.quantity }));
           setCartItems(items);
           return;
         }
@@ -66,8 +66,9 @@ export default function CartPage() {
     }
 
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    setCartItems(cart);
-  };
+    const items = (cart as Array<Partial<Product> & { quantity?: number }>).map((p) => ({ ...(p as Product), quantity: p.quantity || 1 }));
+    setCartItems(items);
+  }
 
   const saveCart = (items: CartItem[]) => {
     localStorage.setItem('cart', JSON.stringify(items));
