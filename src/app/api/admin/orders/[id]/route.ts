@@ -5,7 +5,11 @@ import { User } from "@/models/User";
 import { requireAuth, isNextResponse } from "@/lib/requireAuth";
 
 // GET specific order (admin only)
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  req: Request,
+  context: { params: { id: string } }
+) {
+  const { id } = context.params;
   await connectDB();
 
   const auth = requireAuth(req);
@@ -13,7 +17,6 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   const { userId } = auth as { userId: string };
 
   try {
-    // Verify user is admin
     const user = await User.findById(userId).select("role");
     if (user?.role !== "admin") {
       return NextResponse.json(
@@ -21,8 +24,6 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
         { status: 403 }
       );
     }
-
-    const { id } = params;
 
     const order = await Order.findById(id)
       .populate("items.product", "name images")
@@ -35,10 +36,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      order,
-    });
+    return NextResponse.json({ success: true, order });
   } catch (error) {
     console.error("Fetch order error:", error);
     return NextResponse.json(
@@ -49,7 +47,11 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 }
 
 // UPDATE order status or payment status (admin only)
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(
+  req: Request,
+  context: { params: { id: string } }
+) {
+  const { id } = context.params;
   await connectDB();
 
   const auth = requireAuth(req);
@@ -57,7 +59,6 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   const { userId } = auth as { userId: string };
 
   try {
-    // Verify user is admin
     const user = await User.findById(userId).select("role");
     if (user?.role !== "admin") {
       return NextResponse.json(
@@ -66,10 +67,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       );
     }
 
-    const { id } = params;
     const { orderStatus, paymentStatus } = await req.json();
 
-    // Validate inputs
     const validOrderStatuses = ["processing", "shipped", "delivered", "cancelled"];
     const validPaymentStatuses = ["pending", "paid", "failed", "refunded"];
 
