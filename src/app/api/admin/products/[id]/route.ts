@@ -11,8 +11,11 @@ export async function GET(req: Request, { params }: any) {
   const adminError = requireAdmin(auth);
   if (adminError) return adminError;
 
+  // defensive id extraction: prefer `params.id`, fall back to parsing the URL
+  const id = params?.id ?? new URL(req.url).pathname.split('/').filter(Boolean).pop();
+
   await connectDB();
-  const product = await Product.findById(params.id);
+  const product = await Product.findById(id);
 
   if (!product) {
     return NextResponse.json(
@@ -33,9 +36,12 @@ export async function PUT(req: Request, { params }: any) {
   try {
     const updates = await req.json();
 
+    // defensive id extraction
+    const id = params?.id ?? new URL(req.url).pathname.split('/').filter(Boolean).pop();
+
     await connectDB();
     const product = await Product.findByIdAndUpdate(
-      params.id,
+      id,
       updates,
       { new: true }
     );
@@ -66,8 +72,11 @@ export async function DELETE(req: Request, { params }: any) {
   if (adminError) return adminError;
 
   try {
+    // defensive id extraction
+    const id = params?.id ?? new URL(req.url).pathname.split('/').filter(Boolean).pop();
+
     await connectDB();
-    const product = await Product.findByIdAndDelete(params.id);
+    const product = await Product.findByIdAndDelete(id);
 
     if (!product) {
       return NextResponse.json(

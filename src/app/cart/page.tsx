@@ -35,6 +35,7 @@ export default function CartPage() {
   const loadCart = async () => {
   const token = getAccessToken();
 
+  // If user is logged in, ONLY use server cart
   if (token) {
     try {
       const res = await fetch('/api/cart', {
@@ -42,21 +43,27 @@ export default function CartPage() {
       });
       const data = await res.json();
 
-      if (data?.success && data.cart?.items) {
-        const items = data.cart.items.map(
-          (it: { product: Product; quantity: number }) => ({
+      if (data?.success) {
+        setCartItems(
+          data.cart.items.map((it: any) => ({
             ...it.product,
             quantity: it.quantity,
-          })
+          }))
         );
-        setCartItems(items);
+        
+        // Clear localStorage cart when logged in to prevent mixing
+        localStorage.removeItem('cart');
         return;
       }
-    } catch (err) {
-      console.error('Failed to load server cart, falling back to localStorage', err);
+    } catch (e) {
+      console.error('Failed to load server cart:', e);
+      // When logged in, show empty cart on error - DO NOT fall back to localStorage
+      setCartItems([]);
+      return;
     }
   }
 
+  // Only use localStorage if user is NOT logged in
   const cart = JSON.parse(localStorage.getItem('cart') || '[]');
   const items = cart.map((p: any) => ({
     ...p,
@@ -81,20 +88,47 @@ useEffect(() => {
   }, []);
 
 
-  const saveCart = (items: CartItem[]) => {
-    const clonedItems = [...items];
-    localStorage.setItem('cart', JSON.stringify(items));
-    setCartItems(items);
-    window.dispatchEvent(new CustomEvent('cartUpdated'));
-  };
+  const saveCart = async (items: CartItem[]) => {
+  const token = getAccessToken();
+  
+  // If logged in, save to server and DON'T save to localStorage
+  if (token) {
+    try {
+      // Update server cart
+      for (const item of items) {
+        await fetch('/api/cart/update', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json', 
+            Authorization: `Bearer ${token}` 
+          },
+          body: JSON.stringify({ 
+            productId: item._id, 
+            quantity: item.quantity 
+          }),
+        });
+      }
+      await loadCart();
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+      return;
+    } catch (err) {
+      console.error('Failed to save to server cart:', err);
+      return;
+    }
+  }
 
+  // Only save to localStorage if NOT logged in
+  localStorage.setItem('cart', JSON.stringify(items));
+  setCartItems(items);
+  window.dispatchEvent(new CustomEvent('cartUpdated'));
+};
   const updateQuantity = async (productId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
     const token = getAccessToken();
     if (token) {
       try {
         await fetch('/api/cart/update', {
-          method: 'PATCH',
+          method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({ productId, quantity: newQuantity }),
         });
@@ -116,7 +150,7 @@ useEffect(() => {
     if (token) {
       try {
         await fetch('/api/cart/remove', {
-          method: 'DELETE',
+          method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({ productId }),
         });
@@ -139,7 +173,7 @@ useEffect(() => {
         // remove each item on server
         for (const item of cartItems) {
           await fetch('/api/cart/remove', {
-            method: 'DELETE',
+            method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
             body: JSON.stringify({ productId: item._id }),
           });
@@ -187,29 +221,14 @@ useEffect(() => {
   };
 
   const handleCheckout = async () => {
-    // TODO: Replace with your actual checkout API
-    try {
-      // const response = await fetch('/api/checkout', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     items: cartItems,
-      //     couponCode: appliedCoupon,
-      //     subtotal,
-      //     tax,
-      //     shipping,
-      //     total
-      //   })
-      // });
-      // const data = await response.json();
-      // if (data.success) {
-      //   router.push(`/checkout/${data.orderId}`);
-      // }
-
-      alert('Checkout API not configured');
-    } catch (error) {
-      console.error('Error during checkout:', error);
+    const token = getAccessToken();
+    if (!token) {
+      router.push('/login');
+      return;
     }
+
+    // Redirect to checkout page
+    router.push('/checkout');
   };
 
   // Calculate totals

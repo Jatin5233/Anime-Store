@@ -11,11 +11,15 @@ export async function GET(req: Request) {
   if (isNextResponse(auth)) return auth;
   const { userId } = auth as { userId: string };
 
-  const cart = await Cart.findOne({ userId })
+  let cart = await Cart.findOne({ userId })
     .populate("items.product")
     .lean();
-
+if (!cart) {
+  cart = await Cart.create({ userId, items: [] });
+}
+console.log("CART USER ID:", userId);
   return NextResponse.json({
+    
     success: true,
     cart: cart ?? { items: [] },
   });

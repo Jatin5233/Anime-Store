@@ -31,6 +31,11 @@ export async function GET(req: Request) {
     if (list.length) query.tags = { $in: list };
   }
 
+  const category = searchParams.get("category");
+  if (category) {
+    query.category = category;
+  }
+
   if (inStock) query.stock = { $gt: 0 };
   if (isLimitedEdition) query.isLimitedEdition = true;
   if (isPreOrder) query.isPreOrder = true;

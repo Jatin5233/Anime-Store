@@ -3,6 +3,7 @@ export interface Product {
   name: string;
   slug: string;
   anime: string;
+  category?: 'collections' | 'keychains' | 'charger' | 'cover_and_cases' | 'gifts';
   character?: string;
   description?: string;
 

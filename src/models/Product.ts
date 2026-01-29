@@ -74,6 +74,20 @@ const ProductSchema = new Schema(
       count: { type: Number, default: 0 },
     },
 
+    // Category to allow grouping products by page
+    category: {
+      type: String,
+      enum: [
+        'collections',
+        'keychains',
+        'charger',
+        'cover_and_cases',
+        'gifts',
+      ],
+      index: true,
+      default: 'collections',
+    },
+
     isActive: {
       type: Boolean,
       default: true,

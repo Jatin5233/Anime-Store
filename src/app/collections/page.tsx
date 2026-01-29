@@ -23,6 +23,7 @@ export default function CollectionsPage() {
   const [filters, setFilters] = useState({
     anime: [] as string[],
     tags: [] as string[],
+    category: 'collections', 
     priceRange: [0, 1000] as [number, number],
     inStock: false,
     isLimitedEdition: false,
@@ -41,15 +42,22 @@ useEffect(() => {
     try {
       setLoading(true);
 
-      const params = {
-        anime: filters.anime.join(","),
-        tags: filters.tags.join(","),
-        minPrice: filters.priceRange[0],
-        maxPrice: filters.priceRange[1],
-        inStock: filters.inStock,
-        isLimitedEdition: filters.isLimitedEdition,
-        isPreOrder: filters.isPreOrder,
-      };
+      const params: any = {
+  category: filters.category,
+  minPrice: filters.priceRange[0],
+  maxPrice: filters.priceRange[1],
+  inStock: filters.inStock,
+  isLimitedEdition: filters.isLimitedEdition,
+  isPreOrder: filters.isPreOrder,
+};
+
+if (filters.anime.length) {
+  params.anime = filters.anime.join(",");
+}
+
+if (filters.tags.length) {
+  params.tags = filters.tags.join(",");
+}
 
       const res = await api.get("/products", { params });
 
@@ -94,6 +102,7 @@ useEffect(() => {
     setFilters({
       anime: [],
       tags: [],
+      category: 'collections',
       priceRange: [0, filterOptions.maxPrice],
       inStock: false,
       isLimitedEdition: false,

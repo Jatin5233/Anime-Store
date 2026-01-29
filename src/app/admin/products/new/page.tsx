@@ -55,6 +55,7 @@ const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     anime: '',
+    category: '',
     character: '',
     description: '',
     price: '',
@@ -142,6 +143,7 @@ const handleImageUpload = async (
 const res = await api.post("/admin/products", {
   name: formData.name,
   anime: formData.anime,
+  category: formData.category || undefined,
   character: formData.character,
   description: formData.description,
   price: Number(formData.price),
@@ -236,6 +238,23 @@ const res = await api.post("/admin/products", {
                   {errors.anime}
                 </p>
               )}
+            </div>
+
+            {/* Category */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-300">Category</label>
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                className="w-full px-4 py-3 bg-gray-900/50 border border-cyan-500/30 rounded-lg focus:outline-none focus:border-cyan-400 text-white"
+              >
+                <option value="">Select Category</option>
+                <option value="collections">Collections</option>
+                <option value="keychains">Keychains</option>
+                <option value="charger">Charger</option>
+                <option value="cover_and_cases">Cover & Cases</option>
+                <option value="gifts">Gifts</option>
+              </select>
             </div>
 
             {/* Character */}
@@ -508,6 +527,7 @@ const res = await api.post("/admin/products", {
                 setFormData({
                   name: '',
                   anime: '',
+                  category: '',
                   character: '',
                   description: '',
                   price: '',

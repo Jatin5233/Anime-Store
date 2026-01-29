@@ -24,6 +24,11 @@ export const useCartStore = create<CartState>((set, get) => ({
       });
     }
 
+    // Dispatch cart update event
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+    }
+
     // persist guest cart to localStorage (product objects only)
     if (typeof window !== "undefined") {
       try {
@@ -64,6 +69,11 @@ export const useCartStore = create<CartState>((set, get) => ({
       ),
     });
 
+    // Dispatch cart update event
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+    }
+
     if (typeof window !== "undefined") {
       try {
         const toSave = get().items.map((it: any) => ({ ...it.product, quantity: it.quantity }));
@@ -86,6 +96,11 @@ export const useCartStore = create<CartState>((set, get) => ({
       ),
     });
 
+    // Dispatch cart update event
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+    }
+
     if (typeof window !== "undefined") {
       try {
         const toSave = get().items.map((it: any) => ({ ...it.product, quantity: it.quantity }));
@@ -96,6 +111,12 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   clearCart: () => {
     set({ items: [] });
+    
+    // Dispatch cart update event
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+    }
+    
     if (typeof window !== "undefined") {
       try {
         localStorage.removeItem('cart');

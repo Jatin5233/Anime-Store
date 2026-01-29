@@ -32,28 +32,26 @@ export default function LoginForm() {
         localStorage.setItem("rememberedEmail", email);
       }
 
-      // If user had items in localStorage cart (from before login), merge them into server-side cart
+      // Clear cart store to prevent cart merging between different users
+      const { useCartStore } = await import('@/store/cartStore');
+      useCartStore.setState({ items: [] });
+      localStorage.removeItem('cart');
+
+      // Fetch the new user's cart from server
       try {
-        const guestCart = JSON.parse(localStorage.getItem('cart') || '[]');
-        if (Array.isArray(guestCart) && guestCart.length > 0) {
-          for (const item of guestCart) {
-            await fetch('/api/cart/add', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${data.accessToken}`,
-              },
-              body: JSON.stringify({ productId: item._id, quantity: item.quantity || 1 }),
-            });
-          }
-          // clear guest cart after merge
-          localStorage.removeItem('cart');
-          window.dispatchEvent(new CustomEvent('cartUpdated'));
+        const cartRes = await fetch('/api/cart', {
+          headers: { Authorization: `Bearer ${data.accessToken}` },
+        });
+        const cartData = await cartRes.json();
+        if (cartData?.success && cartData.cart?.items) {
+          const items = cartData.cart.items.map((it: any) => ({ product: it.product, quantity: it.quantity }));
+          useCartStore.setState({ items });
         }
       } catch (err) {
-        console.error('Failed to merge guest cart after login', err);
+        console.error('Failed to load user cart after login', err);
       }
 
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
       router.push("/");
     } catch (err: any) {
       setError(err.response?.data?.message || "Login failed. Please check your credentials.");

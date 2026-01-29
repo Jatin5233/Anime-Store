@@ -89,8 +89,21 @@ const totalItems = useCartStore((state) =>
 
     init();
 
-    // Listen for cart updates
-    const handleCartUpdate = () => {
+    // Listen for cart updates and reload cart from server
+    const handleCartUpdate = async () => {
+      const token = getAccessToken();
+      if (token) {
+        try {
+          const res = await fetch('/api/cart', { headers: { Authorization: `Bearer ${token}` } });
+          const data = await res.json();
+          if (data?.success && data.cart?.items) {
+            const items = data.cart.items.map((it: any) => ({ product: it.product, quantity: it.quantity }));
+            useCartStore.setState({ items });
+          }
+        } catch (err) {
+          console.error('Failed to reload cart from server', err);
+        }
+      }
       setCartCount(getCartCount());
     };
 
@@ -122,12 +135,18 @@ const totalItems = useCartStore((state) =>
     return parts[0] || "User";
   };
 
-  const logout = () => {
-    clearAuth();
-    setUser(null);
-    setIsDropdownOpen(false);
-    router.push("/");
-  };
+  const logout = async () => {
+  try {
+    await fetch("/api/auth/logout", { method: "POST" });
+  } catch {}
+
+  clearAuth();
+  useCartStore.setState({ items: [] });
+  localStorage.removeItem('cart');
+  setUser(null);
+  setIsDropdownOpen(false);
+  router.push("/");
+};
 
   /* -------------------- RENDER -------------------- */
   return (

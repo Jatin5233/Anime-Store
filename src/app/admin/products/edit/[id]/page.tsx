@@ -42,6 +42,7 @@ const animeOptions = [
   'Ghost in the Shell',
   'Akira',
   'Psycho-Pass',
+  'Psycho-Pass',
   'Blame!',
   'Other Cyberpunk',
 ];
@@ -70,32 +71,30 @@ const statusOptions = [
   { value: 'draft', label: 'Draft', color: 'from-yellow-500 to-amber-600' },
   { value: 'archived', label: 'Archived', color: 'from-gray-500 to-gray-600' },
 ];
-
-interface ProductFormData {
-  name: string;
-  slug: string;
-  anime: string;
-  character: string;
-  description: string;
-  price: number | '';
-  discountPrice: number | '';
-  stock: number | '';
-  isLimitedEdition: boolean;
-  isPreOrder: boolean;
-  releaseDate: string;
-  tags: string[];
-  isActive: boolean;
-  ratings: {
-    average: number;
-    count: number;
-  };
-  images: string[];
-}
-
+ 
 export default function EditProductForm() {
   const router = useRouter();
   const params = useParams();
-  const productId = params.id as string;
+  const productId = params?.id as string;
+
+  interface ProductFormData {
+    name: string;
+    slug: string;
+    anime: string;
+    category?: 'collections' | 'keychains' | 'charger' | 'cover_and_cases' | 'gifts';
+    character: string;
+    description: string;
+    price: number | '';
+    discountPrice: number | '';
+    stock: number | '';
+    isLimitedEdition: boolean;
+    isPreOrder: boolean;
+    releaseDate: string;
+    tags: string[];
+    isActive: boolean;
+    ratings: { average: number; count: number };
+    images: string[];
+  }
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -111,6 +110,7 @@ export default function EditProductForm() {
     name: '',
     slug: '',
     anime: '',
+    category: 'collections',
     character: '',
     description: '',
     price: '',
@@ -133,60 +133,40 @@ export default function EditProductForm() {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        
-        // Replace with your actual API call
-        const mockProduct = {
-          _id: productId,
-          name: 'Cyber Samurai Yori - Ultimate Edition',
-          slug: 'cyber-samurai-yori-ultimate',
-          anime: 'Neo Tokyo Chronicles',
-          character: 'Yori',
-          description: 'Premium cyberpunk figure with full articulation, LED lighting system, and holographic certification. Features:\n• 30 points of articulation\n• RGB LED lighting with mobile app control\n• Custom weapon accessories\n• Display stand with laser-etched serial number\n• Limited edition holographic card\n\nHeight: 30cm\nMaterial: PVC, ABS, LED components',
-          price: 349.99,
-          discountPrice: 299.99,
-          stock: 42,
-          isLimitedEdition: true,
-          isPreOrder: false,
-          releaseDate: '2024-03-15',
-          tags: ['Exclusive', 'LED Feature', 'Limited Edition', 'Articulated'],
-          isActive: true,
-          ratings: {
-            average: 4.8,
-            count: 127,
-          },
-          images: [
-            '/api/placeholder/400/500',
-            '/api/placeholder/400/500',
-            '/api/placeholder/400/500',
-          ],
-        };
 
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 800));
+        const api = (await import('@/lib/axios')).default;
+        const res = await api.get(`/admin/products/${productId}`);
+        const product = res.data.product;
+
+        if (!product) {
+          setErrors({ fetch: 'Product not found' });
+          return;
+        }
 
         setFormData({
-          name: mockProduct.name,
-          slug: mockProduct.slug,
-          anime: mockProduct.anime,
-          character: mockProduct.character,
-          description: mockProduct.description,
-          price: mockProduct.price,
-          discountPrice: mockProduct.discountPrice,
-          stock: mockProduct.stock,
-          isLimitedEdition: mockProduct.isLimitedEdition,
-          isPreOrder: mockProduct.isPreOrder,
-          releaseDate: mockProduct.releaseDate,
-          tags: mockProduct.tags,
-          isActive: mockProduct.isActive,
-          ratings: mockProduct.ratings,
-          images: mockProduct.images,
+          name: product.name || '',
+          slug: product.slug || '',
+          anime: product.anime || '',
+          category: product.category || 'collections',
+          character: product.character || '',
+          description: product.description || '',
+          price: product.price ?? '',
+          discountPrice: product.discountPrice ?? '',
+          stock: product.stock ?? '',
+          isLimitedEdition: !!product.isLimitedEdition,
+          isPreOrder: !!product.isPreOrder,
+          releaseDate: product.releaseDate ? new Date(product.releaseDate).toISOString().slice(0,10) : '',
+          tags: product.tags || [],
+          isActive: product.isActive ?? true,
+          ratings: product.ratings || { average: 0, count: 0 },
+          images: product.images || [],
         });
 
-        setPreviewImages(mockProduct.images);
+        setPreviewImages(product.images || []);
         setStats({
-          views: 2450,
-          orders: 89,
-          revenue: 26699.11,
+          views: product.views ?? 0,
+          orders: product.orders ?? 0,
+          revenue: product.revenue ?? 0,
         });
 
         setErrors({});
@@ -198,9 +178,7 @@ export default function EditProductForm() {
       }
     };
 
-    if (productId) {
-      fetchProduct();
-    }
+    if (productId) fetchProduct();
   }, [productId]);
 
   // Generate slug from name
@@ -211,6 +189,13 @@ export default function EditProductForm() {
       .replace(/\s+/g, '-')
       .replace(/--+/g, '-')
       .trim();
+  };
+
+  const handlePreview = () => {
+    const slug = formData.slug || generateSlug(formData.name || '');
+    if (typeof window !== 'undefined') {
+      window.open(`/product/${slug}`, '_blank');
+    }
   };
 
   const validateForm = () => {
@@ -259,83 +244,65 @@ export default function EditProductForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+
+    if (!validateForm()) return;
 
     setSaving(true);
     setErrors({});
-    
+
     try {
-      // API call to update product
-      const response = await fetch(`/api/admin/products/${productId}`, {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-        body: JSON.stringify({
-          ...formData,
-          images: previewImages,
-          slug: formData.slug || generateSlug(formData.name),
-        }),
-      });
+      const api = (await import('@/lib/axios')).default;
 
-      const data = await response.json();
+      const payload = {
+        ...formData,
+        category: formData.category,
+        images: previewImages,
+        slug: formData.slug || generateSlug(formData.name),
+      } as any;
 
-      if (response.ok) {
-        // Show success message and redirect
-        router.push('/admin/products?updated=true&id=' + productId);
-      } else {
-        setErrors({ submit: data.message || 'Failed to update product' });
-      }
+      await api.put(`/admin/products/${productId}`, payload);
+
+      router.push('/admin/products?updated=true&id=' + productId);
     } catch (error) {
-      setErrors({ submit: 'Network error. Please try again.' });
+      console.error('Update failed', error);
+      setErrors({ submit: (error as any)?.response?.data?.message || (error as any)?.message || 'Network error. Please try again.' });
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
-      return;
-    }
+    if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) return;
 
     try {
-      const response = await fetch(`/api/admin/products/${productId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-      });
-
-      if (response.ok) {
-        router.push('/admin/products?deleted=true');
-      } else {
-        alert('Failed to delete product');
-      }
+      const api = (await import('@/lib/axios')).default;
+      await api.delete(`/admin/products/${productId}`);
+      router.push('/admin/products?deleted=true');
     } catch (error) {
+      console.error('Delete failed', error);
       alert('Network error. Please try again.');
     }
   };
 
-  const handlePreview = () => {
-    window.open(`/product/${formData.slug || generateSlug(formData.name)}`, '_blank');
-  };
+  const handleDuplicate = async () => {
+    try {
+      const api = (await import('@/lib/axios')).default;
+      const newProduct = {
+        ...formData,
+        name: `${formData.name} (Copy)`,
+        slug: `${formData.slug}-copy-${Date.now()}`,
+        stock: 0,
+        ratings: { average: 0, count: 0 },
+        images: previewImages,
+      } as any;
 
-  const handleDuplicate = () => {
-    const newProduct = {
-      ...formData,
-      name: `${formData.name} (Copy)`,
-      slug: `${formData.slug}-copy`,
-      stock: 0,
-      ratings: { average: 0, count: 0 },
-    };
-    
-    // Here you would call your API to create the duplicate
-    console.log('Duplicating product:', newProduct);
-    alert('Product duplicated! This would create a new product in production.');
+      const res = await api.post('/admin/products', newProduct);
+      const created = res.data.product;
+      router.push('/admin/products?created=true&id=' + (created?._id || ''));
+    } catch (error) {
+      console.error('Duplicate failed', error);
+      alert('Failed to duplicate product');
+    }
   };
 
   if (loading) {
@@ -531,6 +498,22 @@ export default function EditProductForm() {
                         {errors.anime}
                       </p>
                     )}
+                  </div>
+
+                  {/* Category */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-300">Category</label>
+                    <select
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
+                      className="w-full px-4 py-3 bg-gray-800/50 border border-cyan-500/30 rounded-lg focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 text-white appearance-none"
+                    >
+                      <option value="collections">Collections</option>
+                      <option value="keychains">Keychains</option>
+                      <option value="charger">Charger</option>
+                      <option value="cover_and_cases">Cover & Cases</option>
+                      <option value="gifts">Gifts</option>
+                    </select>
                   </div>
 
                   <div className="space-y-2">

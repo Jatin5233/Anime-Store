@@ -13,7 +13,7 @@ const AddressSchema = new Schema(
     country: String,
     isDefault: { type: Boolean, default: false },
   },
-  { _id: false }
+  { _id: true } // Enable _id for each address
 );
 
 const UserSchema = new Schema(

@@ -1,28 +1,36 @@
-import mongoose, { Schema, models } from "mongoose";
+import { Schema, model, models, Types } from "mongoose";
 
-const CartSchema = new Schema(
-  {
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: false, // guest cart allowed
-    },
-    items: [
-      {
-        product: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Product",
-          required: true,
-        },
-        quantity: {
-          type: Number,
-          required: true,
-          min: 1,
-        },
-      },
-    ],
+export interface ICartItem {
+  product: Types.ObjectId;
+  quantity: number;
+}
+
+export interface ICart {
+  userId: Types.ObjectId;
+  items: ICartItem[];
+}
+
+const CartSchema = new Schema<ICart>({
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+    unique: true,
   },
-  { timestamps: true }
-);
+  items: [
+    {
+      product: {
+        type: Schema.Types.ObjectId,
+        ref: "Product",
+        required: true,
+      },
+      quantity: {
+        type: Number,
+        required: true,
+        min: 1,
+      },
+    },
+  ],
+});
 
-export const Cart = models.Cart || mongoose.model("Cart", CartSchema);
+export const Cart = models.Cart || model<ICart>("Cart", CartSchema);
