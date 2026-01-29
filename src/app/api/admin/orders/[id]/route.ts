@@ -5,11 +5,10 @@ import { User } from "@/models/User";
 import { requireAuth, isNextResponse } from "@/lib/requireAuth";
 
 // GET specific order (admin only)
-export async function GET(
-  req: Request,
-  context: { params: { id: string } }
-) {
-  const { id } = context.params;
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const parts = url.pathname.split('/').filter(Boolean);
+  const id = parts[parts.length - 1];
   await connectDB();
 
   const auth = requireAuth(req);
@@ -47,11 +46,10 @@ export async function GET(
 }
 
 // UPDATE order status or payment status (admin only)
-export async function PATCH(
-  req: Request,
-  context: { params: { id: string } }
-) {
-  const { id } = context.params;
+export async function PATCH(req: Request) {
+  const url = new URL(req.url);
+  const parts = url.pathname.split('/').filter(Boolean);
+  const id = parts[parts.length - 1];
   await connectDB();
 
   const auth = requireAuth(req);

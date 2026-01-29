@@ -3,10 +3,10 @@ import { connectDB } from "@/lib/MongoDB";
 import { Order } from "@/models/Order";
 import { requireAuth, isNextResponse } from "@/lib/requireAuth";
 
-export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const parts = url.pathname.split('/').filter(Boolean);
+  const id = parts[parts.length - 1];
   await connectDB();
 
   const auth = requireAuth(req);
@@ -14,7 +14,7 @@ export async function GET(
   const { userId } = auth as { userId: string };
 
   try {
-    const order = await Order.findById(params.id).populate("items.product");
+    const order = await Order.findById(id).populate("items.product");
 
     if (!order) {
       return NextResponse.json(

@@ -4,7 +4,11 @@ import { Order } from "@/models/Order";
 import { requireAuth, isNextResponse } from "@/lib/requireAuth";
 
 // GET specific order details
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const parts = url.pathname.split('/').filter(Boolean);
+  const id = parts[parts.length - 1];
+
   await connectDB();
 
   const auth = requireAuth(req);
@@ -12,7 +16,6 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   const { userId } = auth as { userId: string };
 
   try {
-    const { id } = params;
 
     const order = await Order.findById(id)
       .populate("items.product", "name images")
