@@ -4,10 +4,9 @@ import { Order } from "@/models/Order";
 import { requireAuth, isNextResponse } from "@/lib/requireAuth";
 
 // GET specific order details
-export async function GET(req: Request) {
-  const url = new URL(req.url);
-  const parts = url.pathname.split('/').filter(Boolean);
-  const id = parts[parts.length - 1];
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  const id = resolvedParams.id;
 
   await connectDB();
 

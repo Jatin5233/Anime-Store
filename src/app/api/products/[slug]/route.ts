@@ -4,13 +4,14 @@ import { Product } from "@/models/Product";
 
 export async function GET(
   req: Request,
-  { params }: any
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     await connectDB();
 
+    const resolvedParams = await params;
     const product = await Product.findOne({
-      slug: params.slug,
+      slug: resolvedParams.slug,
       isActive: true,
     }).lean();
 
