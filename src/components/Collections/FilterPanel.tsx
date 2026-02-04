@@ -185,41 +185,24 @@ export function FilterPanel({
             <div className="space-y-6">
               {/* Price Range */}
               <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm font-semibold text-gray-300">Price Range</span>
-                  <span className="text-sm text-cyan-300">
-                    ₹{filters.priceRange[0]} - ₹{filters.priceRange[1]}
-                  </span>
-                </div>
-                <div className="relative pt-6">
-                  <div className="absolute top-3 left-0 right-0 h-1 bg-gray-700 rounded-full"></div>
-                  <div 
-                    className="absolute top-3 h-1 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full"
-                    style={{
-                      left: `${(filters.priceRange[0] / filterOptions.maxPrice) * 100}%`,
-                      right: `${100 - (filters.priceRange[1] / filterOptions.maxPrice) * 100}%`
-                    }}
-                  ></div>
+                <label className="text-sm font-semibold text-gray-300 block mb-3">Price Range (₹)</label>
+                <div className="flex gap-2 w-full">
                   <input
-                    type="range"
+                    type="number"
                     min="0"
-                    max={filterOptions.maxPrice}
-                    value={filters.priceRange[0]}
-                    onChange={(e) => onFilterChange('priceRange', [parseInt(e.target.value), filters.priceRange[1]])}
-                    className="absolute w-full top-3 h-1 bg-transparent appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-cyan-500"
+                    placeholder="Min"
+                    value={filters.priceRange[0] === 0 ? '' : filters.priceRange[0]}
+                    onChange={(e) => onFilterChange('priceRange', [parseInt(e.target.value) || 0, filters.priceRange[1]])}
+                    className="w-[45%] px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
                   />
                   <input
-                    type="range"
+                    type="number"
                     min="0"
-                    max={filterOptions.maxPrice}
-                    value={filters.priceRange[1]}
-                    onChange={(e) => onFilterChange('priceRange', [filters.priceRange[0], parseInt(e.target.value)])}
-                    className="absolute w-full top-3 h-1 bg-transparent appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-purple-500"
+                    placeholder="Max"
+                    value={filters.priceRange[1] === 10000 ? '' : filters.priceRange[1]}
+                    onChange={(e) => onFilterChange('priceRange', [filters.priceRange[0], parseInt(e.target.value) || 10000])}
+                    className="w-[45%] px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-xs text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                   />
-                </div>
-                <div className="flex justify-between text-xs text-gray-400 mt-1">
-                  <span>₹0</span>
-                  <span>₹{filterOptions.maxPrice}</span>
                 </div>
               </div>
 

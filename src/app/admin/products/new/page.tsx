@@ -6,14 +6,15 @@ import {
   Save, 
   X, 
   Upload, 
-  DollarSign, 
   Hash, 
   Calendar,
   Tag,
   Image,
   Info,
   Check,
-  AlertCircle
+  AlertCircle,
+  Loader2,
+  IndianRupee
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -48,6 +49,7 @@ const tagOptions = [
 export default function AddProductPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [previewImages, setPreviewImages] = useState<string[]>([]);
 const [uploadedImages, setUploadedImages] = useState<string[]>([]);
@@ -89,27 +91,37 @@ const handleImageUpload = async (
   const files = e.target.files;
   if (!files) return;
 
-  for (let i = 0; i < Math.min(files.length, 5); i++) {
-    const file = files[i];
+  setUploading(true);
+  const filesToProcess = Math.min(files.length, 5 - previewImages.length);
 
-    // UI preview only
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreviewImages(prev => [...prev, reader.result as string]);
-    };
-    reader.readAsDataURL(file);
+  try {
+    for (let i = 0; i < filesToProcess; i++) {
+      const file = files[i];
 
-    // Upload to Cloudinary (ADMIN AUTH REQUIRED)
-    const formData = new FormData();
-    formData.append("file", file);
+      // UI preview only
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImages(prev => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
 
-    const res = await api.post("/admin/upload", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+      // Upload to Cloudinary (ADMIN AUTH REQUIRED)
+      const uploadFormData = new FormData();
+      uploadFormData.append("file", file);
 
-    setUploadedImages(prev => [...prev, res.data.url]);
+      const res = await api.post("/admin/upload", uploadFormData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      setUploadedImages(prev => [...prev, res.data.url]);
+    }
+  } catch (err) {
+    console.error('Image upload failed:', err);
+    setErrors(prev => ({ ...prev, images: 'Failed to upload image. Please try again.' }));
+  } finally {
+    setUploading(false);
   }
 };
 
@@ -286,16 +298,16 @@ const res = await api.post("/admin/products", {
         {/* Pricing & Stock */}
         <div className="bg-gray-800/30 rounded-xl p-6 border border-gray-700">
           <div className="flex items-center space-x-2 mb-6">
-            <DollarSign className="w-5 h-5 text-green-400" />
+            <IndianRupee className="w-5 h-5 text-green-400" />
             <h3 className="text-lg font-semibold text-white">Pricing & Stock</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Price */}
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-300">Price (Rs) *</label>
+              <label className="text-sm font-semibold text-gray-300">Price (₹) *</label>
               <div className="relative">
-                <DollarSign className="absolute left-3 top-3.5 w-4 h-4 text-cyan-400" />
+                <IndianRupee className="absolute left-3 top-3.5 w-4 h-4 text-cyan-400" />
                 <input
                   type="number"
                   step="0.01"
@@ -316,9 +328,9 @@ const res = await api.post("/admin/products", {
 
             {/* Discount Price */}
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-300">Discount Price (Rs)</label>
+              <label className="text-sm font-semibold text-gray-300">Discount Price (₹)</label>
               <div className="relative">
-                <DollarSign className="absolute left-3 top-3.5 w-4 h-4 text-purple-400" />
+                <IndianRupee className="absolute left-3 top-3.5 w-4 h-4 text-purple-400" />
                 <input
                   type="number"
                   step="0.01"
@@ -339,8 +351,17 @@ const res = await api.post("/admin/products", {
                 <input
                   type="number"
                   min="0"
+                  step="1"
                   value={formData.stock}
                   onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                  onBlur={(e) => {
+                    const val = parseInt(e.target.value);
+                    if (isNaN(val) || val < 0) {
+                      setFormData({ ...formData, stock: '' });
+                    } else {
+                      setFormData({ ...formData, stock: val.toString() });
+                    }
+                  }}
                   className="w-full pl-10 pr-4 py-3 bg-gray-900/50 border border-green-500/30 rounded-lg focus:outline-none focus:border-green-400 text-white"
                   placeholder="0"
                 />
@@ -443,16 +464,29 @@ const res = await api.post("/admin/products", {
                 multiple
                 accept="image/*"
                 onChange={handleImageUpload}
+                disabled={uploading}
                 className="hidden"
               />
-              <label htmlFor="image-upload" className="cursor-pointer">
+              <label htmlFor="image-upload" className={`${uploading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
                 <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 rounded-full flex items-center justify-center">
-                  <Upload className="w-8 h-8 text-cyan-400" />
+                  {uploading ? (
+                    <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+                  ) : (
+                    <Upload className="w-8 h-8 text-cyan-400" />
+                  )}
                 </div>
-                <p className="text-cyan-300 font-semibold mb-1">Click to upload images</p>
-                <p className="text-sm text-gray-400">PNG, JPG, WEBP up to 5MB (Max 5 images)</p>
+                <p className="text-cyan-300 font-semibold mb-1">
+                  {uploading ? 'Uploading images...' : 'Click to upload images'}
+                </p>
+                <p className="text-sm text-gray-400">{uploading ? 'Please wait...' : 'PNG, JPG, WEBP up to 5MB (Max 5 images)'}</p>
               </label>
             </div>
+            {errors.images && (
+              <p className="text-sm text-red-400 flex items-center">
+                <AlertCircle className="w-4 h-4 mr-1" />
+                {errors.images}
+              </p>
+            )}
 
             {/* Image Previews */}
             {previewImages.length > 0 && (

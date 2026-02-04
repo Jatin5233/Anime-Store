@@ -1,372 +1,408 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import api from "@/lib/axios";
-
-import { 
-  LayoutDashboard, 
-  Package, 
-  Users, 
-  ShoppingBag, 
-  BarChart3, 
-  Settings,
+import { useRouter } from 'next/navigation';
+import {
+  LayoutDashboard,
+  Package,
+  Users,
+  ShoppingBag,
+  BarChart3,
   LogOut,
   Menu,
   X,
-  Home,
-  Sparkles,
-  Bell,
-  Search,
-  ChevronDown
+  AlertCircle,
+  Loader2,
+  TrendingUp,
+  DollarSign,
+  Eye,
 } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import api from '@/lib/axios';
+import { getAccessToken, clearAuth } from '@/lib/authClient';
 
-
-// Page does not accept children — this file is the admin dashboard page
-function isAdminClient(): boolean {
-  if (typeof window === "undefined") return false;
-
-  try {
-    const token = localStorage.getItem("accessToken");
-    if (!token) return false;
-
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.role === "admin";
-  } catch {
-    return false;
-  }
+interface DashboardStats {
+  totalProducts: number;
+  totalOrders: number;
+  totalUsers: number;
+  totalRevenue: number;
+  recentOrders: any[];
+  orderStats: {
+    pending: number;
+    processing: number;
+    shipped: number;
+    delivered: number;
+  };
 }
 
-export default function AdminPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [notifications] = useState(3);
-  const [stats, setStats] = useState({
-  products: 0,
-  orders: 0,
-  users: 0,
-  revenue: 0,
-});
-  const pathname = usePathname();
+export default function AdminDashboard() {
   const router = useRouter();
-   
-  useEffect(() => {
-  const fetchUser = async () => {
-    try {
-      const res = await api.get("/user/me");
-      setUser(res.data.user);
-    } catch (err) {
-      console.error("Failed to load admin user");
-    }
-  };
-
-  fetchUser();
-}, []);
-
-
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalProducts: 0,
+    totalOrders: 0,
+    totalUsers: 0,
+    totalRevenue: 0,
+    recentOrders: [],
+    orderStats: { pending: 0, processing: 0, shipped: 0, delivered: 0 },
+  });
 
   useEffect(() => {
-    if (!isAdminClient()) {
-      router.replace("/");
-    }
+    const checkAdminAccess = async () => {
+      try {
+        const token = getAccessToken();
+        if (!token) {
+          router.push('/login');
+          return;
+        }
+
+        // Verify admin role
+        const decoded = JSON.parse(atob(token.split('.')[1]));
+        if (decoded.role !== 'admin') {
+          router.push('/');
+          return;
+        }
+
+        // Fetch dashboard stats
+        await fetchDashboardStats(token);
+      } catch (err) {
+        console.error('Auth error:', err);
+        router.push('/login');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAdminAccess();
   }, [router]);
 
-  useEffect(() => {
-  const fetchStats = async () => {
+  const fetchDashboardStats = async (token: string) => {
     try {
-      const [productsRes, usersRes, ordersRes] = await Promise.all([
-        api.get("/admin/products"),
-        api.get("/admin/users/count"),
-        api.get("/admin/orders/stats"),
+      const [productsRes, ordersRes, usersRes, statsRes] = await Promise.all([
+        api.get('/admin/products', { headers: { Authorization: `Bearer ${token}` } }),
+        api.get('/admin/orders', { headers: { Authorization: `Bearer ${token}` } }),
+        api.get('/admin/users/count', { headers: { Authorization: `Bearer ${token}` } }),
+        api.get('/admin/orders/stats/overview', { headers: { Authorization: `Bearer ${token}` } }),
       ]);
 
+      const orders = ordersRes.data.orders || [];
       setStats({
-        products: productsRes.data.products.length,
-        users: usersRes.data.count,
-        orders: ordersRes.data.totalOrders,
-        revenue: ordersRes.data.totalRevenue,
+        totalProducts: productsRes.data.products?.length || 0,
+        totalOrders: orders.length || 0,
+        totalUsers: usersRes.data.count || 0,
+        totalRevenue: statsRes.data.totalRevenue || 0,
+        recentOrders: orders.slice(0, 5),
+        orderStats: {
+          pending: orders.filter((o: any) => o.orderStatus === 'processing').length,
+          processing: orders.filter((o: any) => o.orderStatus === 'processing').length,
+          shipped: orders.filter((o: any) => o.orderStatus === 'shipped').length,
+          delivered: orders.filter((o: any) => o.orderStatus === 'delivered').length,
+        },
       });
     } catch (err) {
-      console.error("Failed to load dashboard stats");
+      console.error('Failed to fetch stats:', err);
     }
   };
-
-  fetchStats();
-}, []);
-
-  const menuItems = [
-    { name: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
-    { name: 'Products', icon: Package, path: '/admin/products' },
-    { name: 'Orders', icon: ShoppingBag, path: '/admin/orders' },
-    { name: 'Users', icon: Users, path: '/admin/users' },
-    { name: 'Analytics', icon: BarChart3, path: '/admin/analytics' },
-   
-  ];
 
   const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    router.push('/login');
+    clearAuth();
+    router.push('/');
   };
-  const getUserInitials = (name?: string) => {
-    if (!name || typeof name !== 'string') {
-      return 'U'; // Default for undefined name
-    }
-    
-    // Clean up the name string and get initials
-    const trimmedName = name.trim();
-    if (!trimmedName) return 'U';
-    
-    const parts = trimmedName.split(' ');
-    const initials = parts
-      .map(word => word.charAt(0))
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-    
-    return initials || 'U';
+
+  const menuItems = [
+    { name: 'Dashboard', icon: LayoutDashboard, path: '/admin', badge: null },
+    { name: 'Products', icon: Package, path: '/admin/products', badge: stats.totalProducts },
+    { name: 'Orders', icon: ShoppingBag, path: '/admin/orders', badge: stats.totalOrders },
+    { name: 'Users', icon: Users, path: '/admin/users', badge: null },
+  ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-gray-950 to-gray-900">
+        <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-screen bg-gray-950">
+      {/* Sidebar */}
+      <div className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-gradient-to-b from-gray-900 to-gray-950 border-r border-cyan-500/20 transition-all duration-300 flex flex-col hidden md:flex`}>
+        {/* Logo */}
+        <div className="p-6 border-b border-cyan-500/20">
+          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+              <BarChart3 className="w-6 h-6 text-white" />
+            </div>
+            {sidebarOpen && <span className="font-bold text-white text-lg">ADMIN</span>}
+          </Link>
+        </div>
+
+        {/* Menu Items */}
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+          {menuItems.map((item) => (
+            <Link
+              key={item.path}
+              href={item.path}
+              className="flex items-center justify-between px-4 py-3 rounded-lg text-gray-400 hover:text-cyan-300 hover:bg-cyan-500/10 transition-all"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <item.icon className="w-5 h-5 flex-shrink-0" />
+                {sidebarOpen && <span className="font-medium truncate">{item.name}</span>}
+              </div>
+              {sidebarOpen && item.badge !== null && (
+                <span className="text-xs bg-cyan-500/20 text-cyan-300 px-2 py-1 rounded-full border border-cyan-500/30 flex-shrink-0">
+                  {item.badge}
+                </span>
+              )}
+            </Link>
+          ))}
+        </nav>
+
+        {/* Logout */}
+        <div className="p-4 border-t border-cyan-500/20">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/10 transition-all"
+          >
+            <LogOut className="w-5 h-5" />
+            {sidebarOpen && <span className="font-medium">Logout</span>}
+          </button>
+        </div>
+
+        {/* Toggle Sidebar */}
+        <div className="p-4 border-t border-cyan-500/20">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="w-full flex items-center justify-center p-2 rounded-lg hover:bg-gray-800/50 transition-colors text-gray-400 hover:text-cyan-300"
+          >
+            {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="h-16 bg-gradient-to-r from-cyan-500/10 to-purple-600/10 border-b border-cyan-500/20 flex items-center justify-between px-6 md:px-8">
+          <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="md:hidden p-2">
+            <Menu className="w-6 h-6 text-cyan-400" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-auto">
+          <div className="p-6 md:p-8 space-y-8">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <StatCard
+                icon={Package}
+                label="Total Products"
+                value={stats.totalProducts}
+                trend="+12%"
+                color="cyan"
+              />
+              <StatCard
+                icon={ShoppingBag}
+                label="Total Orders"
+                value={stats.totalOrders}
+                trend="+8%"
+                color="purple"
+              />
+              <StatCard
+                icon={Users}
+                label="Total Users"
+                value={stats.totalUsers}
+                trend="+5%"
+                color="pink"
+              />
+              <StatCard
+                icon={DollarSign}
+                label="Total Revenue"
+                value={`₹${stats.totalRevenue.toFixed(0)}`}
+                trend="+15%"
+                color="green"
+              />
+            </div>
+
+            {/* Order Status Overview */}
+            <div className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 rounded-2xl border border-cyan-500/20 p-8">
+              <h2 className="text-xl font-bold text-white mb-6">Order Status Overview</h2>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <OrderStatusCard status="Pending" count={stats.orderStats.pending} color="yellow" />
+                <OrderStatusCard status="Processing" count={stats.orderStats.processing} color="blue" />
+                <OrderStatusCard status="Shipped" count={stats.orderStats.shipped} color="purple" />
+                <OrderStatusCard status="Delivered" count={stats.orderStats.delivered} color="green" />
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <QuickActionCard
+                title="Add Product"
+                description="Create a new product"
+                href="/admin/products/new"
+                icon={Package}
+                color="cyan"
+              />
+              <QuickActionCard
+                title="View Orders"
+                description="Manage customer orders"
+                href="/admin/orders"
+                icon={ShoppingBag}
+                color="purple"
+              />
+              <QuickActionCard
+                title="View Users"
+                description="Manage user accounts"
+                href="/admin/users"
+                icon={Users}
+                color="pink"
+              />
+            </div>
+
+            {/* Recent Orders */}
+            {stats.recentOrders.length > 0 && (
+              <div className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 rounded-2xl border border-cyan-500/20 p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-white">Recent Orders</h2>
+                  <Link href="/admin/orders" className="text-cyan-400 hover:text-cyan-300 text-sm font-semibold flex items-center gap-1">
+                    View All <Eye className="w-4 h-4" />
+                  </Link>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-700">
+                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Order ID</th>
+                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Customer</th>
+                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Amount</th>
+                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Status</th>
+                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {stats.recentOrders.map((order) => (
+                        <tr key={order._id} className="border-b border-gray-800 hover:bg-gray-800/30 transition-colors">
+                          <td className="py-3 px-4 text-white font-mono text-xs">{order._id.slice(-8).toUpperCase()}</td>
+                          <td className="py-3 px-4 text-gray-300">{order.user?.email || 'N/A'}</td>
+                          <td className="py-3 px-4 text-green-400 font-semibold">₹{order.totalAmount?.toFixed(2) || '0.00'}</td>
+                          <td className="py-3 px-4">
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${
+                              order.orderStatus === 'delivered'
+                                ? 'bg-green-500/20 text-green-300 border-green-500/30'
+                                : order.orderStatus === 'shipped'
+                                ? 'bg-blue-500/20 text-blue-300 border-blue-500/30'
+                                : 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'
+                            }`}>
+                              {order.orderStatus?.charAt(0).toUpperCase() + order.orderStatus?.slice(1)}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-gray-400">{new Date(order.createdAt).toLocaleDateString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface StatCardProps {
+  icon: any;
+  label: string;
+  value: string | number;
+  trend: string;
+  color: 'cyan' | 'purple' | 'pink' | 'green';
+}
+
+function StatCard({ icon: Icon, label, value, trend, color }: StatCardProps) {
+  const colorClasses = {
+    cyan: 'from-cyan-500/20 to-cyan-600/10 border-cyan-500/30',
+    purple: 'from-purple-500/20 to-purple-600/10 border-purple-500/30',
+    pink: 'from-pink-500/20 to-pink-600/10 border-pink-500/30',
+    green: 'from-green-500/20 to-green-600/10 border-green-500/30',
+  };
+
+  const iconColors = {
+    cyan: 'text-cyan-400',
+    purple: 'text-purple-400',
+    pink: 'text-pink-400',
+    green: 'text-green-400',
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100">
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 z-50 bg-black/50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-gray-900/90 backdrop-blur-xl border-r border-cyan-500/20 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300`}>
-        {/* Logo */}
-        <div className="p-6 border-b border-gray-800">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-purple-600 rounded-xl flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                AnimeStore
-              </h1>
-              <p className="text-xs text-cyan-300/70">Admin Panel</p>
-            </div>
-          </div>
+    <div className={`bg-gradient-to-br ${colorClasses[color]} rounded-2xl border p-6 backdrop-blur-xl hover:border-opacity-100 transition-all`}>
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-gray-400 text-sm font-medium mb-2">{label}</p>
+          <p className="text-3xl font-bold text-white">{value}</p>
+          <p className="text-xs text-green-400 mt-2 flex items-center gap-1"><TrendingUp className="w-3 h-3" />{trend} from last month</p>
         </div>
-
-        {/* User Info */}
-        <div className="p-6 border-b border-gray-800">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-purple-600 rounded-full flex items-center justify-center">
-              <span className="text-lg font-bold text-white">{getUserInitials(user?.name) || 'Admin'}</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-white truncate">{user?.name || 'Admin'}</p>
-              <p className="text-xs text-cyan-400 truncate">{user?.email || 'admin@animestore.com'}</p>
-              <div className="mt-1">
-                <span className="inline-block px-2 py-0.5 text-xs font-semibold bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-300 rounded-full border border-cyan-500/30">
-                  Admin
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Navigation */}
-        <nav className="p-4 space-y-1">
-          {menuItems.map((item) => {
-            const isActive = pathname === item.path;
-            return (
-              <Link
-                key={item.name}
-                href={item.path}
-                className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-                  isActive
-                    ? 'bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-300 border border-cyan-500/30'
-                    : 'text-gray-400 hover:text-cyan-300 hover:bg-gray-800/50'
-                }`}
-                onClick={() => setSidebarOpen(false)}
-              >
-                <item.icon className="w-5 h-5" />
-                <span className="font-medium">{item.name}</span>
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Bottom Section */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-800">
-          <Link
-            href="/"
-            className="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:text-cyan-300 hover:bg-gray-800/50 rounded-lg transition-colors mb-2"
-          >
-            <Home className="w-5 h-5" />
-            <span className="font-medium">Back to Store</span>
-          </Link>
-          
-          <button
-            onClick={handleLogout}
-            className="flex items-center space-x-3 w-full px-4 py-3 text-gray-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-            <span className="font-medium">Logout</span>
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <div className="lg:pl-64">
-        {/* Top Bar */}
-        <header className="sticky top-0 z-40 bg-gray-900/80 backdrop-blur-md border-b border-cyan-500/20">
-          <div className="flex items-center justify-between px-4 py-3">
-            {/* Left Section */}
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 hover:bg-gray-800/50 rounded-lg transition-colors"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-              
-              <div className="hidden md:block">
-                <h2 className="text-lg font-semibold text-white">
-                  {menuItems.find(item => item.path === pathname)?.name || 'Dashboard'}
-                </h2>
-                <p className="text-xs text-cyan-300/70">Admin Dashboard</p>
-              </div>
-            </div>
-
-            {/* Right Section */}
-            <div className="flex items-center space-x-4">
-              {/* Search */}
-              <div className="hidden md:block relative group">
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="bg-gray-800/50 border border-cyan-500/30 rounded-full pl-10 pr-4 py-2 w-64 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 text-sm"
-                />
-                <Search className="absolute left-3 top-2.5 w-4 h-4 text-cyan-400" />
-              </div>
-
-              {/* Notifications */}
-              <button className="relative p-2 hover:bg-gray-800/50 rounded-lg transition-colors group">
-                <Bell className="w-5 h-5 text-gray-400 group-hover:text-cyan-400" />
-                {notifications > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold">
-                    {notifications}
-                  </span>
-                )}
-              </button>
-
-              {/* Quick Actions */}
-              <div className="relative group">
-                <button className="flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-lg hover:border-cyan-400 transition-colors">
-                  <span className="text-sm font-semibold text-cyan-300">Quick Actions</span>
-                  <ChevronDown className="w-4 h-4 text-cyan-400" />
-                </button>
-                
-                {/* Dropdown */}
-                <div className="absolute right-0 mt-2 w-48 bg-gray-900/95 backdrop-blur-xl rounded-xl border border-cyan-500/20 shadow-2xl overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
-                  <Link
-                    href="/admin/products/new"
-                    className="block px-4 py-3 text-sm text-gray-300 hover:text-cyan-300 hover:bg-gray-800/50 transition-colors"
-                  >
-                    Add New Product
-                  </Link>
-                  <Link
-                    href="/admin/orders/new"
-                    className="block px-4 py-3 text-sm text-gray-300 hover:text-cyan-300 hover:bg-gray-800/50 transition-colors"
-                  >
-                    Process Order
-                  </Link>
-                  <div className="border-t border-gray-800">
-                    <Link
-                      href="/admin/settings"
-                      className="block px-4 py-3 text-sm text-gray-300 hover:text-cyan-300 hover:bg-gray-800/50 transition-colors"
-                    >
-                      Settings
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Main Content Area */}
-        <main className="p-4 md:p-6">
-          {/* Stats Cards */}
-          <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-4 border border-cyan-500/10">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">Total Products</p>
-                  <p className="text-2xl font-bold text-white">{stats.products}</p>
-                </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-cyan-500/20 to-cyan-600/20 rounded-lg flex items-center justify-center">
-                  <Package className="w-6 h-6 text-cyan-400" />
-                </div>
-              </div>
-              <div className="mt-2 text-xs text-green-400">+12% from last month</div>
-            </div>
-
-            <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-4 border border-purple-500/10">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">Total Orders</p>
-                  <p className="text-2xl font-bold text-white">{stats.orders}</p>
-                </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-lg flex items-center justify-center">
-                  <ShoppingBag className="w-6 h-6 text-purple-400" />
-                </div>
-              </div>
-              <div className="mt-2 text-xs text-green-400">+8% from last month</div>
-            </div>
-
-            <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-4 border border-pink-500/10">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">Active Users</p>
-                  <p className="text-2xl font-bold text-white">{stats.orders}</p>
-                </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-pink-500/20 to-pink-600/20 rounded-lg flex items-center justify-center">
-                  <Users className="w-6 h-6 text-pink-400" />
-                </div>
-              </div>
-              <div className="mt-2 text-xs text-green-400">+5% from last month</div>
-            </div>
-
-            <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-4 border border-green-500/10">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">Revenue</p>
-                 <p className="text-2xl font-bold text-white">₹{stats.revenue}</p>
-                </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-lg flex items-center justify-center">
-                  <BarChart3 className="w-6 h-6 text-green-400" />
-                </div>
-              </div>
-              <div className="mt-2 text-xs text-green-400">+15% from last month</div>
-            </div>
-          </div>
-
-          {/* Page Content */}
-          <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-cyan-500/20 overflow-hidden p-6">
-            {/* Admin page content: dashboard overview and quick links */}
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-2">Overview</h3>
-              <p className="text-sm text-gray-400 mb-4">Use the sidebar to navigate admin sections (Products, Orders, Users, Analytics).</p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Link href="/admin/products" className="px-4 py-3 bg-gray-800/40 rounded-lg border border-cyan-500/10 text-cyan-300">Manage Products</Link>
-                <Link href="/admin/orders" className="px-4 py-3 bg-gray-800/40 rounded-lg border border-purple-500/10 text-purple-300">View Orders</Link>
-                <Link href="/admin/users" className="px-4 py-3 bg-gray-800/40 rounded-lg border border-pink-500/10 text-pink-300">Manage Users</Link>
-                <Link href="/admin/analytics" className="px-4 py-3 bg-gray-800/40 rounded-lg border border-green-500/10 text-green-300">Analytics</Link>
-              </div>
-            </div>
-          </div>
-        </main>
+        <Icon className={`w-8 h-8 ${iconColors[color]}`} />
       </div>
     </div>
+  );
+}
+
+interface OrderStatusCardProps {
+  status: string;
+  count: number;
+  color: 'yellow' | 'blue' | 'purple' | 'green';
+}
+
+function OrderStatusCard({ status, count, color }: OrderStatusCardProps) {
+  const colorClasses = {
+    yellow: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400',
+    blue: 'bg-blue-500/10 border-blue-500/30 text-blue-400',
+    purple: 'bg-purple-500/10 border-purple-500/30 text-purple-400',
+    green: 'bg-green-500/10 border-green-500/30 text-green-400',
+  };
+
+  return (
+    <div className={`rounded-lg border p-4 text-center ${colorClasses[color]} hover:border-opacity-100 transition-all`}>
+      <p className="text-sm font-medium mb-2">{status}</p>
+      <p className="text-2xl font-bold">{count}</p>
+    </div>
+  );
+}
+
+interface QuickActionCardProps {
+  title: string;
+  description: string;
+  href: string;
+  icon: any;
+  color: 'cyan' | 'purple' | 'pink';
+}
+
+function QuickActionCard({ title, description, href, icon: Icon, color }: QuickActionCardProps) {
+  const colorClasses = {
+    cyan: 'from-cyan-500/20 to-cyan-600/10 border-cyan-500/30 hover:border-cyan-400/50 hover:shadow-lg hover:shadow-cyan-500/20',
+    purple: 'from-purple-500/20 to-purple-600/10 border-purple-500/30 hover:border-purple-400/50 hover:shadow-lg hover:shadow-purple-500/20',
+    pink: 'from-pink-500/20 to-pink-600/10 border-pink-500/30 hover:border-pink-400/50 hover:shadow-lg hover:shadow-pink-500/20',
+  };
+
+  const iconColors = {
+    cyan: 'text-cyan-400',
+    purple: 'text-purple-400',
+    pink: 'text-pink-400',
+  };
+
+  return (
+    <Link
+      href={href}
+      className={`bg-gradient-to-br ${colorClasses[color]} rounded-xl border p-6 transition-all hover:scale-105`}
+    >
+      <Icon className={`w-8 h-8 ${iconColors[color]} mb-3`} />
+      <h3 className="text-white font-bold mb-1">{title}</h3>
+      <p className="text-gray-400 text-sm">{description}</p>
+    </Link>
   );
 }

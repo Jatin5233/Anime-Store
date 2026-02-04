@@ -167,8 +167,11 @@ function ProductGallery({ images, productName }: { images: string[]; productName
   
   if (!images || images.length === 0) {
     return (
-      <div className="aspect-square bg-gray-800 rounded-xl flex items-center justify-center text-gray-500">
-        No Image Available
+      <div className="aspect-square bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl flex items-center justify-center text-gray-500 border border-gray-700/50">
+        <div className="text-center">
+          <Sparkles className="w-12 h-12 mx-auto mb-2 opacity-50" />
+          <p>No Image Available</p>
+        </div>
       </div>
     );
   }
@@ -182,63 +185,69 @@ function ProductGallery({ images, productName }: { images: string[]; productName
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Main Image */}
-      <div className="relative aspect-square bg-gray-900 rounded-xl overflow-hidden border border-cyan-500/20 shadow-2xl">
+      <div className="relative aspect-square bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl overflow-hidden border border-cyan-500/40 shadow-2xl">
         <Image
           src={images[selectedImage]}
           alt={`${productName} - Image ${selectedImage + 1}`}
           fill
-          className="object-cover"
+          className="object-cover hover:scale-105 transition-transform duration-500"
           priority
         />
+
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
 
         {images.length > 1 && (
           <>
             <button
               onClick={handlePrevious}
-              className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all backdrop-blur-sm"
+              className="absolute left-3 md:left-5 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-2.5 md:p-3 rounded-full transition-all backdrop-blur-sm hover:scale-110 active:scale-95 shadow-xl"
               aria-label="Previous image"
+              title="Previous image"
             >
-              <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+              <ChevronLeft className="w-6 h-6" />
             </button>
             <button
               onClick={handleNext}
-              className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all backdrop-blur-sm"
+              className="absolute right-3 md:right-5 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-2.5 md:p-3 rounded-full transition-all backdrop-blur-sm hover:scale-110 active:scale-95 shadow-xl"
               aria-label="Next image"
+              title="Next image"
             >
-              <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+              <ChevronRight className="w-6 h-6" />
             </button>
           </>
         )}
 
         {/* Image Counter */}
         {images.length > 1 && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-full text-white text-sm">
-            {selectedImage + 1} / {images.length}
+          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-md px-4 py-2 rounded-full text-white text-sm font-semibold shadow-xl border border-white/10">
+            {selectedImage + 1} <span className="text-gray-400 mx-1">/</span> {images.length}
           </div>
         )}
       </div>
 
       {/* Thumbnail Grid */}
       {images.length > 1 && (
-        <div className="grid grid-cols-4 md:grid-cols-5 gap-2 md:gap-3">
+        <div className="grid grid-cols-4 md:grid-cols-5 gap-3">
           {images.map((image, index) => (
             <button
               key={`${image}-${index}`}
               onClick={() => setSelectedImage(index)}
-              className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+              className={`aspect-square rounded-xl overflow-hidden border-3 transition-all hover:scale-105 active:scale-95 shadow-md ${
                 index === selectedImage
                   ? 'border-cyan-500 shadow-lg shadow-cyan-500/50'
-                  : 'border-gray-700 hover:border-gray-500'
+                  : 'border-gray-700 hover:border-cyan-400/50'
               }`}
+              title={`View image ${index + 1}`}
             >
               <Image
                 src={image}
                 alt={`${productName} thumbnail ${index + 1}`}
-                width={100}
-                height={100}
-                className="object-cover w-full h-full"
+                width={150}
+                height={150}
+                className="object-cover w-full h-full hover:scale-110 transition-transform duration-300"
               />
             </button>
           ))}
@@ -306,37 +315,39 @@ function ProductInfo({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 md:space-y-7">
       {/* Product Header */}
-      <div>
+      <div className="space-y-4">
         <ProductBadges badges={badges} />
 
-        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-3">
-          {product.name}
-        </h1>
-        
-        <div className="flex flex-wrap items-center gap-2 md:gap-4 text-sm md:text-base text-gray-300 mb-4">
-          <span className="text-cyan-400 font-medium">{product.anime}</span>
-          {product.character && (
-            <>
-              <span className="text-gray-600">•</span>
-              <span className="text-purple-300">{product.character}</span>
-            </>
-          )}
+        <div>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight mb-3">
+            {product.name}
+          </h1>
+          
+          <div className="flex flex-wrap items-center gap-2 md:gap-4 text-sm md:text-base text-gray-300">
+            <span className="text-cyan-400 font-semibold">{product.anime}</span>
+            {product.character && (
+              <>
+                <span className="text-gray-600">•</span>
+                <span className="text-purple-300 font-medium">{product.character}</span>
+              </>
+            )}
+          </div>
         </div>
 
-        {/* Rating */}
-        <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-6">
+        {/* Rating & Stock */}
+        <div className="flex flex-wrap items-center gap-3 md:gap-5 pt-2">
           <div className="flex items-center gap-2">
             {renderStars(product.ratings.average)}
             <span className="text-base md:text-lg font-bold text-white">
               {product.ratings.average.toFixed(1)}
             </span>
           </div>
-          <span className="text-sm md:text-base text-gray-400">
-            ({product.ratings.count} reviews)
+          <span className="text-xs md:text-sm text-gray-500">
+            {product.ratings.count} reviews
           </span>
-          <span className="text-gray-600 hidden sm:inline">•</span>
+          <div className="h-5 border-r border-gray-700/50"></div>
           <span className={`text-xs md:text-sm font-semibold ${product.stock > 0 ? 'text-green-400' : 'text-red-400'}`}>
             {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
           </span>
@@ -344,31 +355,36 @@ function ProductInfo({
       </div>
 
       {/* Price Section */}
-      <div className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 rounded-xl p-4 md:p-6 border border-cyan-500/20 shadow-xl">
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
-          <PriceBox 
-            price={product.discountPrice || product.price}
-            originalPrice={product.discountPrice ? product.price : undefined}
-            inStock={product.stock > 0}
-          />
+      <div className="bg-gradient-to-br from-cyan-950/30 via-gray-900/50 to-purple-950/30 rounded-xl p-5 md:p-7 border border-gradient border-cyan-500/30 shadow-2xl">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-5">
+          <div>
+            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1 font-semibold">Price</p>
+            <PriceBox 
+              price={product.discountPrice || product.price}
+              originalPrice={product.discountPrice ? product.price : undefined}
+              inStock={product.stock > 0}
+            />
+          </div>
           
           {/* Social Actions */}
           <div className="flex items-center gap-2">
             <button
               onClick={handleToggleWishlist}
-              className={`p-2.5 rounded-full border transition-all ${
+              className={`p-2.5 rounded-full border transition-all hover:scale-110 active:scale-95 ${
                 isInWishlist
-                  ? 'bg-gradient-to-r from-pink-500/20 to-rose-500/20 text-pink-400 border-pink-500/30'
-                  : 'bg-gray-800/30 text-gray-400 border-gray-700 hover:border-pink-500/30 hover:text-pink-400'
+                  ? 'bg-gradient-to-r from-pink-500/30 to-rose-500/30 text-pink-400 border-pink-500/50 shadow-lg shadow-pink-500/20'
+                  : 'bg-gray-800/30 text-gray-400 border-gray-700 hover:border-pink-500/50 hover:text-pink-400'
               }`}
               aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+              title={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
             >
               <Heart className={`w-5 h-5 ${isInWishlist ? 'fill-pink-400' : ''}`} />
             </button>
             <button
               onClick={onShare}
-              className="p-2.5 bg-gray-800/30 text-gray-400 border border-gray-700 rounded-full hover:border-cyan-500/30 hover:text-cyan-400 transition-all"
+              className="p-2.5 bg-gray-800/30 text-gray-400 border border-gray-700 rounded-full hover:border-cyan-500/50 hover:text-cyan-400 transition-all hover:scale-110 active:scale-95"
               aria-label="Share product"
+              title="Share product"
             >
               <Share2 className="w-5 h-5" />
             </button>
@@ -376,23 +392,25 @@ function ProductInfo({
         </div>
 
         {/* Quantity Selector */}
-        <QuantitySelector 
-          quantity={quantity}
-          onQuantityChange={setQuantity}
-          maxQuantity={product.stock}
-        />
+        <div className="mb-5">
+          <QuantitySelector 
+            quantity={quantity}
+            onQuantityChange={setQuantity}
+            maxQuantity={product.stock}
+          />
+        </div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons with better styling */}
         <div className="space-y-3">
            <button
              onClick={handleAddToCart}
             disabled={isAddingToCart || isInCart || product.stock === 0}
-            className={`w-full py-3 md:py-3.5 rounded-lg font-bold text-white transition-all flex items-center justify-center gap-2 text-sm md:text-base ${
+            className={`w-full py-3 md:py-3.5 rounded-lg font-bold text-white transition-all flex items-center justify-center gap-2 text-sm md:text-base shadow-lg hover:shadow-2xl ${
               isInCart
                 ? 'bg-gradient-to-r from-green-500 to-emerald-600 cursor-default'
                 : product.stock === 0
-                ? 'bg-gradient-to-r from-red-500 to-red-600 cursor-not-allowed'
-                : 'bg-gradient-to-r from-cyan-500 to-purple-600 hover:shadow-[0_0_30px_rgba(0,240,255,0.5)] hover:-translate-y-0.5'
+                ? 'bg-gradient-to-r from-red-500 to-red-600 cursor-not-allowed opacity-70'
+                : 'bg-gradient-to-r from-cyan-500 to-purple-600 hover:shadow-[0_0_30px_rgba(0,240,255,0.5)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] hover:-translate-y-1'
             } ${isAddingToCart ? 'opacity-80 cursor-not-allowed' : ''}`}
           >
             {isAddingToCart ? (
@@ -418,23 +436,23 @@ function ProductInfo({
             )}
           </button>
 
-          <button className="w-full py-3 md:py-3.5 border-2 border-cyan-400 text-cyan-300 rounded-lg font-bold hover:bg-cyan-500/10 transition-colors text-sm md:text-base">
+          <button className="w-full py-3 md:py-3.5 border-2 border-cyan-400 text-cyan-300 rounded-lg font-bold hover:bg-cyan-500/10 transition-all text-sm md:text-base shadow-lg">
             Buy Now
           </button>
         </div>
 
-        {/* Stock Progress */}
+        {/* Stock Progress - Enhanced */}
         {product.stock > 0 && product.stock < 50 && (
-          <div className="mt-6">
+          <div className="mt-6 pt-5 border-t border-gray-700/50">
             <div className="flex justify-between text-xs md:text-sm mb-2">
-              <span className="text-cyan-300">Only {product.stock} left in stock</span>
+              <span className="text-cyan-300 font-semibold">Limited stock available</span>
               <span className="text-gray-400">
-                {Math.round((product.stock / 50) * 100)}% remaining
+                {product.stock} item{product.stock !== 1 ? 's' : ''} left
               </span>
             </div>
-            <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+            <div className="h-2.5 bg-gray-700 rounded-full overflow-hidden shadow-inner">
               <div 
-                className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 transition-all duration-300"
+                className="h-full bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 transition-all duration-300"
                 style={{ width: `${(product.stock / 50) * 100}%` }}
               ></div>
             </div>
@@ -443,82 +461,85 @@ function ProductInfo({
       </div>
 
       {/* Features & Details */}
-      <div className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 rounded-xl p-4 md:p-6 border border-purple-500/20 shadow-xl">
-        <h3 className="text-lg md:text-xl font-bold text-white mb-4 flex items-center">
-          <Zap className="w-5 h-5 mr-2 text-purple-400 flex-shrink-0" />
-          <span>Features & Details</span>
+      <div className="bg-gradient-to-br from-purple-950/30 via-gray-900/50 to-gray-950/30 rounded-xl p-5 md:p-7 border border-purple-500/30 shadow-2xl">
+        <h3 className="text-lg md:text-xl font-bold text-white mb-5 flex items-center">
+          <Zap className="w-5 h-5 mr-2.5 text-purple-400 flex-shrink-0" />
+          <span>Product Details</span>
         </h3>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           {product.dimensions && (
-            <div className="space-y-1">
-              <p className="text-xs md:text-sm text-gray-400">Dimensions</p>
+            <div className="bg-gray-900/30 rounded-lg p-3 border border-purple-500/20">
+              <p className="text-xs md:text-sm text-gray-500 uppercase tracking-wide font-semibold mb-1">Dimensions</p>
               <p className="text-sm md:text-base font-semibold text-white">
-                {product.dimensions.height}cm × {product.dimensions.width}cm × {product.dimensions.depth}cm
+                {product.dimensions.height}×{product.dimensions.width}×{product.dimensions.depth}cm
               </p>
             </div>
           )}
           
           {product.material && (
-            <div className="space-y-1">
-              <p className="text-xs md:text-sm text-gray-400">Material</p>
+            <div className="bg-gray-900/30 rounded-lg p-3 border border-purple-500/20">
+              <p className="text-xs md:text-sm text-gray-500 uppercase tracking-wide font-semibold mb-1">Material</p>
               <p className="text-sm md:text-base font-semibold text-white">{product.material}</p>
             </div>
           )}
           
           {product.releaseDate && (
-            <div className="space-y-1">
-              <p className="text-xs md:text-sm text-gray-400">Release Date</p>
+            <div className="bg-gray-900/30 rounded-lg p-3 border border-purple-500/20">
+              <p className="text-xs md:text-sm text-gray-500 uppercase tracking-wide font-semibold mb-1">Release Date</p>
               <p className="text-sm md:text-base font-semibold text-white">
-                {new Date(product.releaseDate).toLocaleDateString()}
+                {new Date(product.releaseDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
               </p>
             </div>
           )}
           
-          <div className="space-y-1">
-            <p className="text-xs md:text-sm text-gray-400">Availability</p>
-            <p className="text-sm md:text-base font-semibold text-green-400">
-              {product.isPreOrder ? 'Pre-Order Now' : 'In Stock'}
+          <div className="bg-gray-900/30 rounded-lg p-3 border border-purple-500/20">
+            <p className="text-xs md:text-sm text-gray-500 uppercase tracking-wide font-semibold mb-1">Status</p>
+            <p className={`text-sm md:text-base font-semibold ${product.isPreOrder ? 'text-blue-400' : 'text-green-400'}`}>
+              {product.isPreOrder ? 'Pre-Order' : 'In Stock'}
             </p>
           </div>
         </div>
 
         {/* Tags */}
         {product.tags && product.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {product.tags.map((tag, index) => (
-              <span
-                key={index}
-                className="px-3 py-1.5 bg-gradient-to-r from-purple-500/10 to-pink-500/10 text-purple-300 rounded-lg border border-purple-500/20 text-xs md:text-sm"
-              >
-                {tag}
-              </span>
-            ))}
+          <div className="pt-4 border-t border-gray-700/50">
+            <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-3">Tags</p>
+            <div className="flex flex-wrap gap-2">
+              {product.tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className="px-3 py-1.5 bg-gradient-to-r from-purple-500/10 to-pink-500/10 text-purple-300 rounded-full border border-purple-500/30 text-xs md:text-sm font-medium hover:border-purple-400/60 transition-all"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
           </div>
         )}
       </div>
 
-      {/* Shipping & Guarantee */}
+      {/* Shipping & Guarantee - Enhanced */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 rounded-xl p-4 border border-cyan-500/20 shadow-lg">
+        <div className="bg-gradient-to-br from-cyan-950/30 to-cyan-900/20 rounded-xl p-4 md:p-5 border border-cyan-500/30 shadow-lg hover:border-cyan-500/50 transition-all">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-cyan-500/20 to-cyan-600/20 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Truck className="w-5 h-5 md:w-6 md:h-6 text-cyan-400" />
+            <div className="w-12 h-12 bg-gradient-to-br from-cyan-500/30 to-cyan-600/20 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
+              <Truck className="w-6 h-6 text-cyan-400" />
             </div>
             <div>
-              <p className="text-sm md:text-base font-semibold text-white">Free Shipping</p>
+              <p className="text-sm md:text-base font-bold text-cyan-300">Free Shipping</p>
               <p className="text-xs md:text-sm text-gray-400">On orders over ₹100</p>
             </div>
           </div>
         </div>
         
-        <div className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 rounded-xl p-4 border border-green-500/20 shadow-lg">
+        <div className="bg-gradient-to-br from-green-950/30 to-green-900/20 rounded-xl p-4 md:p-5 border border-green-500/30 shadow-lg hover:border-green-500/50 transition-all">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Shield className="w-5 h-5 md:w-6 md:h-6 text-green-400" />
+            <div className="w-12 h-12 bg-gradient-to-br from-green-500/30 to-green-600/20 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
+              <Shield className="w-6 h-6 text-green-400" />
             </div>
             <div>
-              <p className="text-sm md:text-base font-semibold text-white">Authenticity Guarantee</p>
+              <p className="text-sm md:text-base font-bold text-green-300">100% Authentic</p>
               <p className="text-xs md:text-sm text-gray-400">Official merchandise</p>
             </div>
           </div>
@@ -537,17 +558,19 @@ function ProductDescription({
   title?: string;
 }) {
   return (
-    <div className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 rounded-2xl border border-cyan-500/20 overflow-hidden shadow-xl">
-      <div className="p-4 md:p-6 border-b border-gray-800">
+    <div className="bg-gradient-to-br from-cyan-950/30 via-gray-900/50 to-gray-950/30 rounded-2xl border border-cyan-500/30 overflow-hidden shadow-2xl">
+      <div className="p-6 md:p-8 border-b border-cyan-500/20 bg-gradient-to-r from-cyan-950/20 to-purple-950/20">
         <h2 className="text-xl md:text-2xl font-bold text-white flex items-center">
-          <MessageSquare className="w-5 h-5 md:w-6 md:h-6 mr-2 md:mr-3 text-cyan-400 flex-shrink-0" />
+          <MessageSquare className="w-6 h-6 mr-3 text-cyan-400 flex-shrink-0" />
           <span>{title}</span>
         </h2>
       </div>
       
-      <div className="p-4 md:p-6">
-        <div className="text-sm md:text-base text-gray-300 whitespace-pre-line leading-relaxed">
-          {description}
+      <div className="p-6 md:p-8">
+        <div className="text-sm md:text-base text-gray-300 whitespace-pre-line leading-relaxed space-y-4">
+          {description.split('\n').map((para, idx) => (
+            para.trim() && <p key={idx}>{para}</p>
+          ))}
         </div>
       </div>
     </div>
@@ -695,69 +718,87 @@ export default function ProductPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950">
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 flex flex-col">
       <Header />
-      {/* Back Button */}
-      <div className="container mx-auto px-4 pt-6">
+      
+      {/* Main Product Section - Optimized Layout */}
+      <div className="flex-1 container mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+        {/* Back Button */}
         <button
           onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors"
+          className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors mb-6 lg:mb-8"
         >
           <ChevronLeft className="w-5 h-5" />
-          Back
+          <span className="text-sm font-medium">Back</span>
         </button>
-      </div>
 
-      {/* Main Product Section */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
-          {/* Left: Gallery */}
-          <div className="flex justify-center">
-            <div className="w-full max-w-[720px]">
+        {/* Main Grid - Better space utilization */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-10 items-start">
+          {/* Left: Gallery - 60% width */}
+          <div className="xl:col-span-2">
+            <div className="sticky top-32 z-10">
               <ProductGallery images={product.images} productName={product.name} />
             </div>
           </div>
 
-          {/* Right: Product Info */}
-          <div className="w-full max-w-xl">
-            <ProductInfo
-              product={extendedProduct}
-              onAddToCart={handleAddToCart}
-              onToggleWishlist={handleToggleWishlist}
-              onShare={handleShare}
-            />
+          {/* Right: Product Info - 40% width */}
+          <div className="xl:col-span-1">
+            <div className="sticky top-32 z-20">
+              <ProductInfo
+                product={extendedProduct}
+                onAddToCart={handleAddToCart}
+                onToggleWishlist={handleToggleWishlist}
+                onShare={handleShare}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Bottom: Description and Features */}
-        <div className="mt-12 lg:mt-16 space-y-8">
-          {product.description && (
-            <ProductDescription
-              description={product.description}
-              title="Product Description"
-            />
-          )}
+        {/* Bottom Section - Full Width with Better Spacing */}
+        <div className="mt-16 lg:mt-20 space-y-8 lg:space-y-12">
+          {/* Description and Features in a 2-column grid */}
+          {(product.description || (extendedProduct.features && extendedProduct.features.length > 0)) && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
+              {/* Description - 2 columns */}
+              {product.description && (
+                <div className="lg:col-span-2">
+                  <ProductDescription
+                    description={product.description}
+                    title="Product Description"
+                  />
+                </div>
+              )}
 
-          {extendedProduct.features && extendedProduct.features.length > 0 && (
-            <div className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 rounded-2xl p-6 border border-purple-500/20 shadow-xl">
-              <h2 className="text-xl md:text-2xl font-bold text-white mb-6 flex items-center">
-                <Zap className="w-6 h-6 mr-3 text-purple-400" />
-                Key Features
-              </h2>
-              <ProductFeatures features={extendedProduct.features} />
+              {/* Features - 1 column */}
+              {extendedProduct.features && extendedProduct.features.length > 0 && (
+                <div className="lg:col-span-1">
+                  <div className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 rounded-2xl p-6 border border-purple-500/20 shadow-xl h-full">
+                    <h2 className="text-lg md:text-xl font-bold text-white mb-5 flex items-center">
+                      <Zap className="w-5 h-5 mr-2 text-purple-400 flex-shrink-0" />
+                      Key Features
+                    </h2>
+                    <ProductFeatures features={extendedProduct.features} />
+                  </div>
+                </div>
+              )}
             </div>
           )}
-        </div>
-      </div>
 
-      {/* Related Products Section */}
-      <div className="container mx-auto px-4 py-12">
-        <div className="border-t border-gray-800 pt-12">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">
-            You May Also Like
-          </h2>
-          <div className="text-gray-500 text-center py-8">
-            Related products coming soon...
+          {/* Related Products Section */}
+          <div className="border-t border-gray-800/50 pt-12 lg:pt-16">
+            <div className="mb-8">
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2">
+                You May Also Like
+              </h2>
+              <p className="text-gray-400 text-sm md:text-base">Explore more anime merchandise from our collection</p>
+            </div>
+            <div className="text-gray-500 text-center py-12 lg:py-16 bg-gradient-to-b from-gray-900/20 to-transparent rounded-2xl border border-gray-800/30">
+              <div className="mb-4">
+                <Sparkles className="w-12 h-12 text-purple-400/50 mx-auto mb-4" />
+              </div>
+              <p className="text-base md:text-lg">Related products coming soon...</p>
+              <p className="text-sm text-gray-600 mt-2">Check back later for similar items</p>
+            </div>
           </div>
         </div>
       </div>

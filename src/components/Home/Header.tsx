@@ -54,7 +54,7 @@ const totalItems = useCartStore((state) =>
     { label: "Home", href: "/", icon: Home },
     { label: "Collections", href: "/collections", icon: Package },
     { label: "KeyChains", href: "/keychains", icon: Zap },
-    { label: "Gift-Items", href: "/gift-items", icon: Bell },
+    { label: "Gift-Items", href: "/gifts", icon: Bell },
     { label: "Others", href: "/others", icon: Sparkles },
   ];
 
@@ -232,7 +232,7 @@ const totalItems = useCartStore((state) =>
                       {getFirstName(user.name)}
                     </div>
                     <div className="text-[10px] text-gray-400">
-                      {user.role === "admin" ? "Admin" : "Collector"}
+                      {user.role === "admin" ? "Admin" : "User"}
                     </div>
                   </div>
                   <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
@@ -240,82 +240,109 @@ const totalItems = useCartStore((state) =>
 
                 {/* Dropdown Menu */}
                 {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 md:w-56 bg-gray-900/95 backdrop-blur-xl rounded-xl border border-cyan-500/20 shadow-2xl overflow-hidden z-50">
-                    <div className="p-4 border-b border-gray-800">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center">
-                          <span className="text-sm font-bold text-white">
-                            {getUserInitials(user.name)}
-                          </span>
-                        </div>
-                        <div>
-                          <div className="font-semibold text-white truncate">
-                            {user.name || "User"}
+                  <div className="absolute right-0 mt-3 w-72 bg-gradient-to-b from-gray-900/98 to-gray-950/98 backdrop-blur-xl rounded-2xl border border-cyan-500/30 shadow-2xl overflow-hidden z-50">
+                    {/* User Header Section */}
+                    <div className="relative p-6 bg-gradient-to-r from-cyan-500/10 to-purple-600/10 border-b border-cyan-500/20">
+                      <div className="flex items-center gap-4">
+                        <div className="relative">
+                          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center ring-2 ring-cyan-400/30">
+                            <span className="text-lg font-bold text-white">
+                              {getUserInitials(user.name)}
+                            </span>
                           </div>
-                          <div className="text-xs text-cyan-400 truncate">
-                            {user.email || "user@example.com"}
-                          </div>
-                          <div className="flex items-center gap-1 mt-1">
-                            <div className="text-xs px-2 py-0.5 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-300 rounded-full border border-cyan-500/30">
-                              {user.role || "user"}
+                          {user.isVerified && (
+                            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-900 flex items-center justify-center">
+                              <Check className="w-2.5 h-2.5 text-white" />
                             </div>
-                            {user.isVerified && (
-                              <div className="text-xs px-2 py-0.5 bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-300 rounded-full border border-green-500/30">
-                                Verified
-                              </div>
-                            )}
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-white text-base truncate">
+                            {user.name || "User"}
+                          </h3>
+                          <p className="text-sm text-cyan-300/80 truncate">
+                            {user.email || "user@example.com"}
+                          </p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <span className="text-xs px-2.5 py-1 bg-cyan-500/20 text-cyan-300 rounded-md border border-cyan-500/40 font-medium">
+                              {user.role === "admin" ? "👨‍💼 Admin" : "👤 User"}
+                            </span>
                           </div>
                         </div>
                       </div>
                     </div>
-                    
-                    <div className="p-2">
+
+                    {/* Main Menu Items */}
+                    <div className="py-2 px-2">
                       <Link
                         href="/profile"
                         onClick={() => setIsDropdownOpen(false)}
-                        className="dropdown-item-hover"
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:text-cyan-300 hover:bg-cyan-500/10 transition-all duration-200 group border border-transparent hover:border-cyan-500/20"
                       >
-                        <UserCircle className="w-4 h-4" />
-                        <span>My Profile</span>
+                        <UserCircle className="w-5 h-5 text-cyan-400/70 group-hover:text-cyan-400" />
+                        <div className="flex-1">
+                          <span className="font-medium">Profile Settings</span>
+                          <p className="text-xs text-gray-500">Edit your information</p>
+                        </div>
+                        <ChevronDown className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity rotate-[-90deg]" />
                       </Link>
-                      
-                      <Link
-                        href="/wishlist"
-                        onClick={() => setIsDropdownOpen(false)}
-                        className="dropdown-item-hover text-pink-300 hover:text-pink-200"
-                      >
-                        <Heart className="w-4 h-4" />
-                        <span>My Wishlist</span>
-                      </Link>
-                      
+
                       <Link
                         href="/orders"
                         onClick={() => setIsDropdownOpen(false)}
-                        className="dropdown-item-hover text-purple-300 hover:text-purple-200"
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:text-purple-300 hover:bg-purple-500/10 transition-all duration-200 group border border-transparent hover:border-purple-500/20"
                       >
-                        <Package className="w-4 h-4" />
-                        <span>My Orders</span>
+                        <Package className="w-5 h-5 text-purple-400/70 group-hover:text-purple-400" />
+                        <div className="flex-1">
+                          <span className="font-medium">My Orders</span>
+                          <p className="text-xs text-gray-500">Track your purchases</p>
+                        </div>
+                        <ChevronDown className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity rotate-[-90deg]" />
                       </Link>
-                      
+
+                      <Link
+                        href="/wishlist"
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:text-pink-300 hover:bg-pink-500/10 transition-all duration-200 group border border-transparent hover:border-pink-500/20"
+                      >
+                        <Heart className="w-5 h-5 text-pink-400/70 group-hover:text-pink-400" />
+                        <div className="flex-1">
+                          <span className="font-medium">Wishlist</span>
+                          <p className="text-xs text-gray-500">Your saved items</p>
+                        </div>
+                        <ChevronDown className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity rotate-[-90deg]" />
+                      </Link>
+
                       {user.role === "admin" && (
-                        <Link
-                          href="/admin"
-                          onClick={() => setIsDropdownOpen(false)}
-                          className="dropdown-item-hover text-yellow-300 hover:text-yellow-200"
-                        >
-                          <Settings className="w-4 h-4" />
-                          <span>Admin Dashboard</span>
-                        </Link>
+                        <>
+                          <div className="my-2 h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent"></div>
+                          <Link
+                            href="/admin"
+                            onClick={() => setIsDropdownOpen(false)}
+                            className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:text-amber-300 hover:bg-amber-500/10 transition-all duration-200 group border border-transparent hover:border-amber-500/20"
+                          >
+                            <BarChart3 className="w-5 h-5 text-amber-400/70 group-hover:text-amber-400" />
+                            <div className="flex-1">
+                              <span className="font-medium">Admin Dashboard</span>
+                              <p className="text-xs text-gray-500">Manage the store</p>
+                            </div>
+                            <ChevronDown className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity rotate-[-90deg]" />
+                          </Link>
+                        </>
                       )}
                     </div>
-                    
-                    <div className="p-2 border-t border-gray-800">
+
+                    {/* Divider */}
+                    <div className="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent"></div>
+
+                    {/* Logout Section */}
+                    <div className="p-2">
                       <button
                         onClick={logout}
-                        className="dropdown-item-hover text-red-300 hover:text-red-200 hover:bg-red-500/10"
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:text-red-300 hover:bg-red-500/10 transition-all duration-200 group border border-transparent hover:border-red-500/20"
                       >
-                        <LogOut className="w-4 h-4" />
-                        <span>Sign Out</span>
+                        <LogOut className="w-5 h-5 text-red-400/70 group-hover:text-red-400" />
+                        <span className="font-medium">Sign Out</span>
                       </button>
                     </div>
                   </div>

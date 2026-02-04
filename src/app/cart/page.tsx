@@ -133,6 +133,8 @@ useEffect(() => {
           body: JSON.stringify({ productId, quantity: newQuantity }),
         });
         await loadCart();
+        // Dispatch cart update event to update header
+        window.dispatchEvent(new CustomEvent('cartUpdated'));
         return;
       } catch (err) {
         console.error('Failed to update server cart, falling back to local update', err);
@@ -155,6 +157,8 @@ useEffect(() => {
           body: JSON.stringify({ productId }),
         });
         await loadCart();
+        // Dispatch cart update event to update header
+        window.dispatchEvent(new CustomEvent('cartUpdated'));
         return;
       } catch (err) {
         console.error('Failed to remove from server cart, falling back to local remove', err);
@@ -163,6 +167,8 @@ useEffect(() => {
 
     const updatedCart = cartItems.filter(item => item._id !== productId);
     saveCart(updatedCart);
+    // Dispatch cart update event to update header
+    window.dispatchEvent(new CustomEvent('cartUpdated'));
   };
 
   const clearCart = async () => {
@@ -181,6 +187,8 @@ useEffect(() => {
         await loadCart();
         setAppliedCoupon(null);
         setDiscount(0);
+        // Dispatch cart update event to update header
+        window.dispatchEvent(new CustomEvent('cartUpdated'));
         return;
       } catch (err) {
         console.error('Failed to clear server cart, falling back to local clear', err);
@@ -188,6 +196,8 @@ useEffect(() => {
     }
 
     saveCart([]);
+    // Dispatch cart update event to update header
+    window.dispatchEvent(new CustomEvent('cartUpdated'));
     setAppliedCoupon(null);
     setDiscount(0);
   };
@@ -261,11 +271,11 @@ useEffect(() => {
           {/* Header */}
           <div className="mb-8">
             <button
-              onClick={() => router.push('/collections')}
+              onClick={() => router.back()}
               className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors mb-4"
             >
               <ArrowLeft className="w-5 h-5" />
-              Continue Shopping
+              back
             </button>
             <h1 className="text-3xl md:text-4xl font-bold text-white">Shopping Cart</h1>
           </div>
@@ -280,7 +290,7 @@ useEffect(() => {
               Looks like you haven't added any items to your cart yet. Start shopping to fill it up!
             </p>
             <button
-              onClick={() => router.push('/products')}
+              onClick={() => router.push('/collections')}
               className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-600 text-white rounded-lg font-bold hover:shadow-[0_0_30px_rgba(0,240,255,0.5)] hover:-translate-y-0.5 transition-all"
             >
               Start Shopping

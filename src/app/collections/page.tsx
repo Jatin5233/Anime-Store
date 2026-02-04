@@ -24,7 +24,7 @@ export default function CollectionsPage() {
     anime: [] as string[],
     tags: [] as string[],
     category: 'collections', 
-    priceRange: [0, 1000] as [number, number],
+    priceRange: [0, 10000] as [number, number],
     inStock: false,
     isLimitedEdition: false,
     isPreOrder: false,
@@ -44,12 +44,16 @@ useEffect(() => {
 
       const params: any = {
   category: filters.category,
-  minPrice: filters.priceRange[0],
-  maxPrice: filters.priceRange[1],
   inStock: filters.inStock,
   isLimitedEdition: filters.isLimitedEdition,
   isPreOrder: filters.isPreOrder,
 };
+
+// Only add price params if they're not at default 0-10000
+if (filters.priceRange[0] > 0 || filters.priceRange[1] < 10000) {
+  params.minPrice = filters.priceRange[0];
+  params.maxPrice = filters.priceRange[1];
+}
 
 if (filters.anime.length) {
   params.anime = filters.anime.join(",");
@@ -103,7 +107,7 @@ if (filters.tags.length) {
       anime: [],
       tags: [],
       category: 'collections',
-      priceRange: [0, filterOptions.maxPrice],
+      priceRange: [0, 10000],
       inStock: false,
       isLimitedEdition: false,
       isPreOrder: false,

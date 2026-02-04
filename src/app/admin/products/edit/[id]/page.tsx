@@ -6,7 +6,6 @@ import {
   Save, 
   X, 
   Upload, 
-  DollarSign, 
   Hash, 
   Calendar,
   Tag,
@@ -27,7 +26,8 @@ import {
   Hash as HashIcon,
   CalendarDays,
   BarChart,
-  TrendingUp
+  TrendingUp,
+  IndianRupee
 } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
@@ -41,7 +41,6 @@ const animeOptions = [
   'Cyberpunk: Edgerunners',
   'Ghost in the Shell',
   'Akira',
-  'Psycho-Pass',
   'Psycho-Pass',
   'Blame!',
   'Other Cyberpunk',
@@ -98,6 +97,7 @@ export default function EditProductForm() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [stats, setStats] = useState({
@@ -550,7 +550,7 @@ export default function EditProductForm() {
             <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-green-500/20 overflow-hidden">
               <div className="p-6 border-b border-gray-800">
                 <div className="flex items-center space-x-3">
-                  <DollarSign className="w-5 h-5 text-green-400" />
+                  <IndianRupee className="w-5 h-5 text-green-400" />
                   <h2 className="text-xl font-bold text-white">Pricing & Inventory</h2>
                 </div>
               </div>
@@ -559,9 +559,9 @@ export default function EditProductForm() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Price */}
                   <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-300">Price ($) *</label>
+                    <label className="text-sm font-semibold text-gray-300">Price (₹) *</label>
                     <div className="relative">
-                      <DollarSign className="absolute left-3 top-3.5 w-5 h-5 text-green-400" />
+                      <IndianRupee className="absolute left-3 top-3.5 w-5 h-5 text-green-400" />
                       <input
                         type="number"
                         step="0.01"
@@ -582,9 +582,9 @@ export default function EditProductForm() {
 
                   {/* Discount Price */}
                   <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-300">Discount Price ($)</label>
+                    <label className="text-sm font-semibold text-gray-300">Discount Price (₹)</label>
                     <div className="relative">
-                      <DollarSign className="absolute left-3 top-3.5 w-5 h-5 text-purple-400" />
+                      <IndianRupee className="absolute left-3 top-3.5 w-5 h-5 text-purple-400" />
                       <input
                         type="number"
                         step="0.01"
@@ -612,8 +612,17 @@ export default function EditProductForm() {
                       <input
                         type="number"
                         min="0"
+                        step="1"
                         value={formData.stock}
                         onChange={(e) => setFormData({ ...formData, stock: e.target.value ? Number(e.target.value) : '' })}
+                        onBlur={(e) => {
+                          const val = parseInt(e.target.value);
+                          if (isNaN(val) || val < 0) {
+                            setFormData({ ...formData, stock: '' });
+                          } else {
+                            setFormData({ ...formData, stock: val });
+                          }
+                        }}
                         className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-blue-500/30 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400/50 text-white"
                         placeholder="0"
                       />
@@ -717,21 +726,26 @@ export default function EditProductForm() {
               
               <div className="p-6">
                 {/* Image Upload Area */}
-                <div className="border-2 border-dashed border-cyan-500/30 rounded-xl p-8 text-center hover:border-cyan-400 transition-colors bg-gray-800/20">
+                <div className={`border-2 border-dashed border-cyan-500/30 rounded-xl p-8 text-center hover:border-cyan-400 transition-colors bg-gray-800/20 ${uploading ? 'opacity-50' : ''}`}>
                   <input
                     type="file"
                     id="image-upload"
                     multiple
                     accept="image/*"
                     onChange={handleImageUpload}
+                    disabled={uploading}
                     className="hidden"
                   />
-                  <label htmlFor="image-upload" className="cursor-pointer block">
+                  <label htmlFor="image-upload" className={`${uploading ? 'cursor-not-allowed' : 'cursor-pointer'} block`}>
                     <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 rounded-full flex items-center justify-center">
-                      <Upload className="w-10 h-10 text-cyan-400" />
+                      {uploading ? (
+                        <Loader2 className="w-10 h-10 text-cyan-400 animate-spin" />
+                      ) : (
+                        <Upload className="w-10 h-10 text-cyan-400" />
+                      )}
                     </div>
-                    <p className="text-lg font-semibold text-cyan-300 mb-2">Click to upload images</p>
-                    <p className="text-sm text-gray-400 mb-4">PNG, JPG, WEBP up to 5MB each</p>
+                    <p className="text-lg font-semibold text-cyan-300 mb-2">{uploading ? 'Uploading images...' : 'Click to upload images'}</p>
+                    <p className="text-sm text-gray-400 mb-4">{uploading ? 'Please wait...' : 'PNG, JPG, WEBP up to 5MB each'}</p>
                     <p className="text-xs text-gray-500">Upload up to {5 - previewImages.length} more images ({previewImages.length}/5 used)</p>
                   </label>
                 </div>

@@ -48,7 +48,6 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi'>('card');
 
   // New address form
   const [formData, setFormData] = useState({
@@ -233,10 +232,6 @@ export default function CheckoutPage() {
         amount: Math.round(total * 100),
         currency: 'INR',
         order_id: razorpayData.razorpayOrderId,
-        method: {
-          card: paymentMethod === 'card',
-          upi: paymentMethod === 'upi',
-        },
         handler: async (response: any) => {
           try {
             // Verify payment
@@ -561,36 +556,14 @@ export default function CheckoutPage() {
               {/* Payment Method Selection */}
               <div className="mt-6 pt-6 border-t border-gray-700">
                 <h3 className="text-white font-semibold mb-3">Payment Method</h3>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-3 p-3 border border-gray-700 rounded-lg cursor-pointer hover:border-cyan-500/50 transition-colors" style={{ backgroundColor: paymentMethod === 'card' ? 'rgba(0, 240, 255, 0.05)' : 'transparent' }}>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="card"
-                      checked={paymentMethod === 'card'}
-                      onChange={(e) => setPaymentMethod(e.target.value as 'card' | 'upi')}
-                      className="w-4 h-4"
-                    />
+                <div className="p-3 border border-cyan-500/50 rounded-lg bg-gradient-to-r from-cyan-500/10 to-purple-500/10">
+                  <div className="flex items-center gap-3">
+                    <CreditCard className="w-5 h-5 text-cyan-400" />
                     <div className="flex-1">
-                      <div className="text-white font-semibold">Credit/Debit Card</div>
-                      <div className="text-xs text-gray-400">Visa, MasterCard, Amex</div>
+                      <div className="text-white font-semibold">Razorpay Payment</div>
+                      <div className="text-xs text-gray-400">Credit Card, Debit Card, UPI, and more</div>
                     </div>
-                  </label>
-
-                  <label className="flex items-center gap-3 p-3 border border-gray-700 rounded-lg cursor-pointer hover:border-cyan-500/50 transition-colors" style={{ backgroundColor: paymentMethod === 'upi' ? 'rgba(0, 240, 255, 0.05)' : 'transparent' }}>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="upi"
-                      checked={paymentMethod === 'upi'}
-                      onChange={(e) => setPaymentMethod(e.target.value as 'card' | 'upi')}
-                      className="w-4 h-4"
-                    />
-                    <div className="flex-1">
-                      <div className="text-white font-semibold">UPI</div>
-                      <div className="text-xs text-gray-400">PhonePe, Google Pay, PayTm</div>
-                    </div>
-                  </label>
+                  </div>
                 </div>
               </div>
 

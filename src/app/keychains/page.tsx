@@ -23,9 +23,9 @@ export default function KeychainsPage() {
   // Preset filter to only show keychains
  const [filters, setFilters] = useState({
   anime: [] as string[],
-  tags: [] as string[],              // ✅ EMPTY
-  category: 'keychains',             // ✅ category decides page
-  priceRange: [0, 1000] as [number, number],
+  tags: [] as string[],
+  category: 'keychains',
+  priceRange: [0, 10000] as [number, number],
   inStock: false,
   isLimitedEdition: false,
   isPreOrder: false,
@@ -46,12 +46,16 @@ export default function KeychainsPage() {
 
        const params: any = {
   category: filters.category,
-  minPrice: filters.priceRange[0],
-  maxPrice: filters.priceRange[1],
   inStock: filters.inStock,
   isLimitedEdition: filters.isLimitedEdition,
   isPreOrder: filters.isPreOrder,
 };
+
+// Only add price params if they're not at default 0-10000
+if (filters.priceRange[0] > 0 || filters.priceRange[1] < 10000) {
+  params.minPrice = filters.priceRange[0];
+  params.maxPrice = filters.priceRange[1];
+}
 
 if (filters.anime.length) {
   params.anime = filters.anime.join(",");
@@ -104,9 +108,9 @@ if (filters.tags.length) {
   const clearFilters = () => {
   setFilters({
     anime: [],
-    tags: [],                         // ✅ EMPTY
+    tags: [],
     category: 'keychains',
-    priceRange: [0, filterOptions.maxPrice],
+    priceRange: [0, 10000],
     inStock: false,
     isLimitedEdition: false,
     isPreOrder: false,
