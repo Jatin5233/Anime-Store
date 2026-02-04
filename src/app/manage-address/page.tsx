@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getAccessToken } from '@/lib/authClient';
 import { MapPin, ArrowLeft, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
@@ -19,7 +19,7 @@ interface AddressForm {
   isDefault: boolean;
 }
 
-export default function ManageAddressPage() {
+function ManageAddressContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const addressId = searchParams.get('id');
@@ -383,5 +383,13 @@ export default function ManageAddressPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ManageAddressPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-900 text-white flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-cyan-400" /></div>}>
+      <ManageAddressContent />
+    </Suspense>
   );
 }

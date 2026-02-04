@@ -4,7 +4,7 @@ import { User } from "@/models/User";
 import { requireAuth, isNextResponse } from "@/lib/requireAuth";
 
 // DELETE address by ID
-export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   await connectDB();
 
   const auth = requireAuth(req);
@@ -12,7 +12,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   const { userId } = auth as { userId: string };
 
   try {
-    const resolvedParams = params instanceof Promise ? await params : params;
+    const resolvedParams = await params;
     const addressId = resolvedParams.id;
 
     const user = await User.findById(userId);
@@ -70,7 +70,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
 }
 
 // PUT update address by ID
-export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   await connectDB();
 
   const auth = requireAuth(req);
@@ -78,7 +78,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const { userId } = auth as { userId: string };
 
   try {
-    const resolvedParams = params instanceof Promise ? await params : params;
+    const resolvedParams = await params;
     const addressId = resolvedParams.id;
     const {
       fullName,
